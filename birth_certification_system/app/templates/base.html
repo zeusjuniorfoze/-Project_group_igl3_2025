@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Actes de Naissance</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+    <!-- Boxicons CSS (local) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}">
+
+    <style>
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+            url("{{ url_for('static', filename='images/télécharger.jpg') }}") center center no-repeat;
+            background-size: cover;
+            color: white;
+            padding: 100px 0;
+            text-shadow: 1px 1px 3px black;
+            min-height: 70vh;
+        }
+
+        .section {
+            padding: 60px 0;
+        }
+
+        .icon-box {
+            font-size: 48px;
+            color: #0d6efd;
+            margin-bottom: 15px;
+        }
+
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class='bx bxs-baby-carriage'></i> ActesNaissance</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Fonctionnalités</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Connexion</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Bienvenue dans le Système de Gestion des Actes de Naissance</h1>
+            <p class="lead">Un outil moderne, rapide et sécurisé pour gérer les certificats de naissance.</p>
+            <a href="#" class="btn btn-primary btn-lg mt-3 shadow"><i class='bx bx-play-circle'></i> Commencer</a>
+        </div>
+    </header>
+
+    <!-- À propos -->
+    <section class="section bg-light text-center">
+        <div class="container">
+            <h2 class="mb-4">À propos du projet</h2>
+            <p class="lead">
+                Ce projet vise à digitaliser l'enregistrement des naissances pour simplifier les démarches
+                administratives,
+                garantir la sécurité des données personnelles et améliorer l'accès aux documents officiels.
+            </p>
+        </div>
+    </section>
+
+    <!-- Fonctionnalités -->
+    <section class="section text-center">
+        <div class="container">
+            <h2 class="mb-5">Fonctionnalités principales</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <i class='bx bx-shield icon-box'></i>
+                    <h4>Sécurité</h4>
+                    <p>Authentification sécurisée avec JWT et protection des données.</p>
+                </div>
+                <div class="col-md-4">
+                    <i class='bx bx-file icon-box'></i>
+                    <h4>Formulaires intuitifs</h4>
+                    <p>Création d’actes simplifiée via une interface claire.</p>
+                </div>
+                <div class="col-md-4">
+                    <i class='bx bx-bar-chart-alt icon-box'></i>
+                    <h4>Statistiques</h4>
+                    <p>Visualisez les données clés avec des rapports dynamiques.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 Projet Actes de Naissance – Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+
+</html>
