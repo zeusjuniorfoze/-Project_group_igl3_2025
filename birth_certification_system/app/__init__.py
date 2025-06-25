@@ -7,7 +7,9 @@ from .database import db, check_db_connection
 
 from .routes.main import main_bp
 from .routes.auth import auth_bp
-
+from  .routes.admin import admin_bp
+from .routes.hospital import hopital_bp
+from .routes.mairie import mairie_bp
 # Extensions
 jwt = JWTManager()
 mail = Mail()
@@ -46,5 +48,8 @@ def create_app():
     # Enregistrement des blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(hopital_bp, url_prefix='/hopital')
+    app.register_blueprint(mairie_bp, url_prefix='/mairie')
 
     return app
