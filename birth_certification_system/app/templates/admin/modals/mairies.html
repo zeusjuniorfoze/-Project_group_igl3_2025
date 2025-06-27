@@ -1,0 +1,75 @@
+{% for mairie in mairies %}
+
+<!-- Modal Ajout Mairie -->
+<div class="modal fade" id="modalAjoutMairie" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content shadow-lg">
+            <form method="POST" action="{{ url_for('admin.ajouter_mairie') }}">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Ajouter une mairie</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" name="nom" class="form-control mb-2" placeholder="Nom" required>
+                    <input type="text" name="localisation" class="form-control mb-2" placeholder="Localisation"
+                        required>
+                    <input type="text" name="region" class="form-control mb-2" placeholder="Région" required>
+                    <input type="email" name="email_contact" class="form-control mb-2" placeholder="Email">
+                    <input type="text" name="numero_telephone" class="form-control" placeholder="Téléphone">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" type="submit">
+                        <i class='bx bx-save'></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Voir Mairie -->
+<div class="modal fade" id="modalViewMairie{{ mairie.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Détails de la mairie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Nom :</strong> {{ mairie.nom }}</p>
+                <p><strong>Localisation :</strong> {{ mairie.localisation }}</p>
+                <p><strong>Région :</strong> {{ mairie.region }}</p>
+                <p><strong>Email :</strong> {{ mairie.email_contact or 'N/A' }}</p>
+                <p><strong>Téléphone :</strong> {{ mairie.numero_telephone or 'N/A' }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifier Mairie -->
+<div class="modal fade" id="modalEditMairie{{ mairie.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" action="{{ url_for('admin.modifier_mairie', mairie_id=mairie.id) }}" class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Modifier la mairie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" name="nom" class="form-control mb-2" value="{{ mairie.nom }}" required>
+                <input type="text" name="localisation" class="form-control mb-2" value="{{ mairie.localisation }}"
+                    required>
+                <input type="text" name="region" class="form-control mb-2" value="{{ mairie.region }}" required>
+                <input type="email" name="email_contact" class="form-control mb-2" value="{{ mairie.email_contact }}">
+                <input type="text" name="numero_telephone" class="form-control" value="{{ mairie.numero_telephone }}">
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-warning">Enregistrer</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}

@@ -38,3 +38,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+  // Gestion du clic sur les cartes
+        document.querySelectorAll('.card-link').forEach(card => {
+            card.addEventListener('click', function () {
+                const target = this.getAttribute('data-target');
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.querySelector(target).classList.add('active');
+            });
+        });

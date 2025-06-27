@@ -17,115 +17,424 @@
         </div>
 
         <ul class="menu">
-            <li><a href="#page2"><i class="bx bx-user-circle"></i> Gestion des utilisateurs</a></li>
-            <li><a href="#page3"><i class="bx bx-buildings"></i> Gestion des mairies</a></li>
+            <li><a href="#home"><i class="bx bx-home-alt"></i> Accueil</a></li>
+            <li><a href="#page2"><i class="bx bx-user-circle"></i> Utilisateurs</a></li>
+            <li><a href="#page1"><i class="bx bx-plus-medical"></i> Hôpitaux</a></li>
+            <li><a href="#page3"><i class="bx bx-building-house"></i> Mairies</a></li>
             <li><a href="#page4"><i class="bx bx-file"></i> Actes de naissance</a></li>
-            <li><a href="#page5"><i class="bx bx-history"></i> Historique des opérations</a></li>
+            <li><a href="#page5"><i class="bx bx-history"></i> Historique</a></li>
             <li><a href="#page6"><i class="bx bx-cog"></i> Paramètres</a></li>
             <li><a href="#page7"><i class="bx bx-help-circle"></i> Aide</a></li>
         </ul>
 
-        <ul class="navbar-nav ms-auto mb-2lg-0">
-            <li>
-                <a style="font-size: 25px;" href="../deconnexion.php" class="btn btn-con">
-                    <i class='bx bx-log-out'></i> Déconnexion
-                </a>
-            </li>
-        </ul>
+        <div class="logout-btn">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
+                <i class='bx bx-log-out'></i> Déconnexion
+            </a>
+        </div>
     </div>
 
     <div class="content">
-        <div id="page1" class="page active">
+        <!-- SECTION ACCUEIL -->
+        <section id="home" class="page active">
             <div class="container mt-4 text-center">
-                <h2 class="text-center">Bienvenue sur la plateforme de numérisation des actes de naissance</h2>
-                <p>Cette interface vous permet de gérer les actes, les utilisateurs, les mairies et de consulter l’historique des traitements.</p><br>
+                <h2>Bienvenue sur la plateforme de numérisation des actes de naissance</h2>
+                <p>Cette interface vous permet de gérer les actes, les utilisateurs, les mairies et de consulter
+                    l'historique des traitements.</p><br>
 
-                <div class="row">
+                <div class="row g-4">
                     <!-- Carte Mairies -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-primary mb-3">
+                        <div class="card text-white bg-primary mb-3 card-link" data-target="#page3">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-buildings"></i> Mairies</h5>
-                                <p class="card-text">Nombre total enregistré : <strong></strong></p>
+                                <h5 class="card-title"><i class="bx bx-buildings"></i> Mairies</h5>
+                                <p class="card-text">Nombre total enregistré : <strong>{{ mairies|length }}</strong></p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Carte Utilisateurs -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-success mb-3">
+                        <div class="card text-white bg-success mb-3 card-link" data-target="#page2">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-user"></i> Utilisateurs</h5>
-                                <p class="card-text">Nombre total enregistré : <strong></strong></p>
+                                <h5 class="card-title"><i class="bx bx-user"></i> Utilisateurs</h5>
+                                <p class="card-text">Nombre total enregistré : <strong>{{ utilisateurs|length
+                                        }}</strong></p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Carte Actes -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
+                        <div class="card text-white bg-warning mb-3 card-link" data-target="#page4">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-file"></i> Actes de naissance</h5>
-                                <p class="card-text">Nombre total numérisé : <strong></strong></p>
+                                <h5 class="card-title"><i class="bx bx-file"></i> Actes de naissance</h5>
+                                <p class="card-text">Nombre total numérisé : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Carte Historique -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-info mb-3">
+                        <div class="card text-white bg-info mb-3 card-link" data-target="#page5">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-history"></i> Historique</h5>
-                                <p class="card-text">Actions enregistrées : <strong></strong></p>
+                                <h5 class="card-title"><i class="bx bx-history"></i> Historique</h5>
+                                <p class="card-text">Actions enregistrées : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Carte Paramètres -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-secondary mb-3">
+                        <div class="card text-white bg-secondary mb-3 card-link" data-target="#page6">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-cog"></i> Paramètres</h5>
-                                <p class="card-text">Configurations disponibles : <strong></strong></p>
+                                <h5 class="card-title"><i class="bx bx-cog"></i> Paramètres</h5>
+                                <p class="card-text">Configurations disponibles : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- GESTION DES UTILISATEURS -->
-        <div id="page2" class="page">
-            <h1>Gestion des utilisateurs</h1>
-        </div>
+        <!-- SECTION HÔPITAUX -->
+        <section id="page1" class="page container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class='bx bx-clinic'></i> Gestion des Hôpitaux</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutHopital">
+                    <i class='bx bx-plus-medical'></i> Ajouter
+                </button>
+            </div>
 
-        <!-- GESTION DES MAIRIES -->
-        <div id="page3" class="page">
-            <h1>Gestion des mairies</h1>
-        </div>
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Nom</th>
+                            <th>Localisation</th>
+                            <th>Région</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hopital in hopitaux %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ hopital.nom }}</td>
+                            <td>{{ hopital.localisation }}</td>
+                            <td>{{ hopital.region }}</td>
+                            <td>{{ hopital.email_contact or 'N/A' }}</td>
+                            <td>
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalViewHopital{{ hopital.id }}">
+                                    <i class='bx bx-show'></i>
+                                </button>
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalEditHopital{{ hopital.id }}">
+                                    <i class='bx bx-edit'></i>
+                                </button>
+                                <form method="POST"
+                                    action="{{ url_for('admin.supprimer_hopital', hopital_id=hopital.id) }}"
+                                    class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Confirmer la suppression ?')">
+                                        <i class='bx bx-trash'></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
 
-        <!-- GESTION DES ACTES -->
-        <div id="page4" class="page">
-            <h1>Gestion des actes de naissance</h1>
-        </div>
+                        <!-- Modals pour chaque hôpital -->
+                        {% include 'admin/modals/hopitaux.html' %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- HISTORIQUE -->
-        <div id="page5" class="page">
-            <h1>Historique des opérations</h1>
-        </div>
+            <!-- Modal Ajout Hôpital -->
+            <div class="modal fade" id="modalAjoutHopital" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content shadow-lg">
+                        <form method="POST" action="{{ url_for('admin.ajouter_hopital') }}">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">Ajouter un hôpital</h5>
+                                <button class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" name="nom" placeholder="Nom" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" name="localisation"
+                                        placeholder="Localisation" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" name="region" placeholder="Région" required>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="email" class="form-control" name="email_contact" placeholder="Email">
+                                </div>
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" name="numero_telephone"
+                                        placeholder="Téléphone">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-success" type="submit">
+                                    <i class='bx bx-save'></i> Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <!-- PARAMÈTRES -->
-        <div id="page6" class="page">
-            <h1>Paramètres de la plateforme</h1>
-        </div>
+        <!-- SECTION UTILISATEURS -->
+        <section id="page2" class="page container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class='bx bx-group'></i> Gestion des Utilisateurs</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutUtilisateur">
+                    <i class='bx bx-plus-medical'></i> Ajouter
+                </button>
+            </div>
 
-        <!-- AIDE -->
-        <div id="page7" class="page">
-            <h1>Centre d'aide</h1>
-        </div>
+            <div class="mb-3">
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher un utilisateur...">
+            </div>
+
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th><i class='bx bx-user'></i> Nom</th>
+                            <th><i class='bx bx-envelope'></i> Email</th>
+                            <th><i class='bx bx-id-card'></i> Rôle</th>
+                            <th><i class='bx bx-cog'></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        {% for utilisateur in utilisateurs %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ utilisateur.nom_utilisateur }}</td>
+                            <td>{{ utilisateur.email }}</td>
+                            <td>{{ utilisateur.role.value.replace('_', ' ').capitalize() }}</td>
+                            <td>
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalViewUtilisateur{{ utilisateur.id }}">
+                                    <i class='bx bx-show'></i>
+                                </button>
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalEditUtilisateur{{ utilisateur.id }}">
+                                    <i class='bx bx-edit'></i>
+                                </button>
+                                <form
+                                    action="{{ url_for('admin.supprimer_utilisateur', utilisateur_id=utilisateur.id) }}"
+                                    method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Confirmer la suppression ?')">
+                                        <i class='bx bx-trash'></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Modal d'ajout d'un utilisateur -->
+            <div class="modal fade" id="modalAjoutUtilisateur" tabindex="-1" aria-labelledby="modalAjoutLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content shadow-lg">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title" id="modalAjoutLabel"><i class='bx bx-plus'></i> Ajouter un
+                                utilisateur</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form action="{{ url_for('admin.ajouter_utilisateur') }}" method="POST">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label>Nom complet</label>
+                                    <input type="text" name="nom_utilisateur" class="form-control"
+                                        placeholder="Entrez le nom..." required>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Email</label>
+                                    <input type="email" name="email" class="form-control"
+                                        placeholder="Entrez l'email..." required>
+                                </div>
+                                <div class="mb-3">
+                                    <label>Rôle</label>
+                                    <select class="form-select" name="role" id="roleSelect" required>
+                                        <option value="">-- Sélectionner un rôle --</option>
+                                        <option value="ADMIN">Administrateur</option>
+                                        <option value="AGENT_MAIRIE">Agent Mairie</option>
+                                        <option value="AGENT_HOPITAL">Agent Hôpital</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3 d-none" id="mairieSelectContainer">
+                                    <label>Mairie associée</label>
+                                    <select class="form-select" name="mairie_id">
+                                        <option value="">-- Choisir une mairie --</option>
+                                        {% for mairie in mairies %}
+                                        <option value="{{ mairie.id }}">{{ mairie.nom }} ({{ mairie.localisation }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-3 d-none" id="hopitalSelectContainer">
+                                    <label>Hôpital associé</label>
+                                    <select class="form-select" name="hopital_id">
+                                        <option value="">-- Choisir un hôpital --</option>
+                                        {% for hopital in hopitaux %}
+                                        <option value="{{ hopital.id }}">{{ hopital.nom }} ({{ hopital.localisation }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-success">
+                                    <i class='bx bx-save'></i> Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Modals Utilisateurs -->
+            {% include 'admin/modals/utilisateurs.html' %}
+        </section>
+
+        <!-- SECTION MAIRIES -->
+        <section id="page3" class="page container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class='bx bx-building'></i> Gestion des Mairies</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutMairie">
+                    <i class='bx bx-plus-medical'></i> Ajouter
+                </button>
+            </div>
+
+            <div class="table-responsive shadow-sm rounded">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Nom</th>
+                            <th>Localisation</th>
+                            <th>Région</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mairie in mairies %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ mairie.nom }}</td>
+                            <td>{{ mairie.localisation }}</td>
+                            <td>{{ mairie.region }}</td>
+                            <td>{{ mairie.email_contact or 'N/A' }}</td>
+                            <td>
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalViewMairie{{ mairie.id }}">
+                                    <i class='bx bx-show'></i>
+                                </button>
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalEditMairie{{ mairie.id }}">
+                                    <i class='bx bx-edit'></i>
+                                </button>
+                                <form method="POST"
+                                    action="{{ url_for('admin.supprimer_mairie', mairie_id=mairie.id) }}"
+                                    class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Confirmer la suppression ?')">
+                                        <i class='bx bx-trash'></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modals Mairies -->
+            {% include 'admin/modals/mairies.html' %}
+        </section>
+
+        <!-- SECTION ACTES DE NAISSANCE -->
+        <section id="page4" class="page container py-4">
+            <h2><i class='bx bx-file'></i> Gestion des Actes de Naissance</h2>
+            <!-- Contenu à implémenter -->
+            <div class="alert alert-info mt-4">
+                <i class='bx bx-info-circle'></i> Module en cours de développement
+            </div>
+        </section>
+
+        <!-- SECTION HISTORIQUE -->
+        <section id="page5" class="page container py-4">
+            <h2><i class='bx bx-history'></i> Historique des Opérations</h2>
+            <!-- Contenu à implémenter -->
+            <div class="alert alert-info mt-4">
+                <i class='bx bx-info-circle'></i> Module en cours de développement
+            </div>
+        </section>
+
+        <!-- SECTION PARAMÈTRES -->
+        <section id="page6" class="page container py-4">
+            <h2><i class='bx bx-cog'></i> Paramètres du Système</h2>
+            <!-- Contenu à implémenter -->
+            <div class="alert alert-info mt-4">
+                <i class='bx bx-info-circle'></i> Module en cours de développement
+            </div>
+        </section>
+
+        <!-- SECTION AIDE -->
+        <section id="page7" class="page container py-4">
+            <h2><i class='bx bx-help-circle'></i> Centre d'Aide</h2>
+            <!-- Contenu à implémenter -->
+            <div class="alert alert-info mt-4">
+                <i class='bx bx-info-circle'></i> Module en cours de développement
+            </div>
+        </section>
     </div>
 
+    <!-- Scripts -->
+    <script src="../../static/js/bootstrap.bundle.min.js"></script>
     <script src="../../static/js/admin.js"></script>
+
+    <!-- Gestion des messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alert);
+
+            // Fermer automatiquement après 5 secondes
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        });
+    </script>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 </body>
 
 </html>

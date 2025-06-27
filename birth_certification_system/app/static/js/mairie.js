@@ -38,3 +38,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+const cards = document.querySelectorAll(".clickable");
+const pages = document.querySelectorAll(".page");
+
+cards.forEach(card => {
+    card.addEventListener("click", () => {
+        const targetId = card.getAttribute("data-target");
+
+        pages.forEach(page => {
+            page.classList.remove("active");
+        });
+
+        document.getElementById(targetId).classList.add("active");
+    });
+});

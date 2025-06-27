@@ -1,0 +1,104 @@
+{% for utilisateur in utilisateurs %}
+<!-- Modal Voir Utilisateur -->
+<div class="modal fade" id="modalViewUtilisateur{{ utilisateur.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Détails de l'utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.nom_utilisateur }}</p>
+                <p><strong>Email :</strong> {{ utilisateur.email }}</p>
+                <p><strong>Rôle :</strong> {{ utilisateur.role.value.replace('_', ' ').capitalize() }}</p>
+                {% if utilisateur.hopital_id %}
+                <p><strong>Hôpital lié :</strong> {{ utilisateur.hopital_id }}</p>
+                {% endif %}
+                {% if utilisateur.mairie_id %}
+                <p><strong>Mairie liée :</strong> {{ utilisateur.mairie_id }}</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifier Utilisateur -->
+<div class="modal fade" id="modalEditUtilisateur{{ utilisateur.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class='bx bx-edit'></i> Modifier l'utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.modifier_utilisateur', utilisateur_id=utilisateur.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Nom complet</label>
+                        <input type="text" name="nom_utilisateur" class="form-control" value="{{ utilisateur.nom_utilisateur }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ utilisateur.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Rôle</label>
+                        <select class="form-select role-select" name="role" required>
+                            <option value="">-- Sélectionner un rôle --</option>
+                            <option value="ADMIN" {% if utilisateur.role.value == 'ADMIN' %}selected{% endif %}>Administrateur</option>
+                            <option value="AGENT_MAIRIE" {% if utilisateur.role.value == 'AGENT_MAIRIE' %}selected{% endif %}>Agent Mairie</option>
+                            <option value="AGENT_HOPITAL" {% if utilisateur.role.value == 'AGENT_HOPITAL' %}selected{% endif %}>Agent Hôpital</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 {% if utilisateur.role.value != 'AGENT_MAIRIE' %}d-none{% endif %}" id="mairieSelectContainer-{{ utilisateur.id }}">
+                        <label>Mairie associée</label>
+                        <select class="form-select" name="mairie_id">
+                            <option value="">-- Choisir une mairie --</option>
+                            {% for mairie in mairies %}
+                            <option value="{{ mairie.id }}" {% if utilisateur.mairie_id == mairie.id %}selected{% endif %}>
+                                {{ mairie.nom }} ({{ mairie.localisation }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3 {% if utilisateur.role.value != 'AGENT_HOPITAL' %}d-none{% endif %}" id="hopitalSelectContainer-{{ utilisateur.id }}">
+                        <label>Hôpital associé</label>
+                        <select class="form-select" name="hopital_id">
+                            <option value="">-- Choisir un hôpital --</option>
+                            {% for hopital in hopitaux %}
+                            <option value="{{ hopital.id }}" {% if utilisateur.hopital_id == hopital.id %}selected{% endif %}>
+                                {{ hopital.nom }} ({{ hopital.localisation }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning"><i class='bx bx-save'></i> Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const roleSelect = document.getElementById('roleSelect');
+        const mairieContainer = document.getElementById('mairieSelectContainer');
+        const hopitalContainer = document.getElementById('hopitalSelectContainer');
+
+        if (roleSelect && mairieContainer && hopitalContainer) {
+            roleSelect.addEventListener('change', () => {
+                const role = roleSelect.value;
+                mairieContainer.classList.toggle('d-none', role !== 'AGENT_MAIRIE');
+                hopitalContainer.classList.toggle('d-none', role !== 'AGENT_HOPITAL');
+            });
+        }
+    });
+</script>

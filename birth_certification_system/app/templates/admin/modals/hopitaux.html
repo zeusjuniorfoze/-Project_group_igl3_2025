@@ -1,0 +1,72 @@
+{% for hopital in hopitaux %}
+
+<!-- Modal Ajout Hôpital -->
+<div class="modal fade" id="modalAjoutHopital" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content shadow-lg">
+            <form method="POST" action="{{ url_for('admin.ajouter_hopital') }}">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Ajouter un hôpital</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- champs formulaire ajout -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" type="submit">
+                        <i class='bx bx-save'></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Voir Hôpital -->
+<div class="modal fade" id="modalViewHopital{{ hopital.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Détails de l'hôpital</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Nom :</strong> {{ hopital.nom }}</p>
+                <p><strong>Localisation :</strong> {{ hopital.localisation }}</p>
+                <p><strong>Région :</strong> {{ hopital.region }}</p>
+                <p><strong>Email :</strong> {{ hopital.email_contact or 'N/A' }}</p>
+                <p><strong>Téléphone :</strong> {{ hopital.numero_telephone or 'N/A' }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modifier Hôpital -->
+<div class="modal fade" id="modalEditHopital{{ hopital.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" action="{{ url_for('admin.modifier_hopital', hopital_id=hopital.id) }}"
+            class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Modifier l'hôpital</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" name="nom" class="form-control mb-2" value="{{ hopital.nom }}" required>
+                <input type="text" name="localisation" class="form-control mb-2" value="{{ hopital.localisation }}"
+                    required>
+                <input type="text" name="region" class="form-control mb-2" value="{{ hopital.region }}" required>
+                <input type="email" name="email_contact" class="form-control mb-2" value="{{ hopital.email_contact }}">
+                <input type="text" name="numero_telephone" class="form-control" value="{{ hopital.numero_telephone }}">
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-warning">Enregistrer</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}

@@ -20,7 +20,7 @@
 
             <!-- Login Form -->
             <div class="form login_form">
-                <form action="#" method="POST">
+                <form action="{{ url_for('auth.login_post') }}" method="POST">
                     <h2><i class='bx bx-log-in'></i> Login</h2>
                     <div class="input_box">
                         <input type="email" name="email" id="login-email" placeholder="Enter your email" required />
@@ -41,7 +41,7 @@
                             <input type="checkbox" id="check" />
                             <label for="check">Remember me</label>
                         </span>
-                        <a href="{{ url_for('auth.forgetpassword') }}" class="forgot_pw">Forgot password?</a>
+                        <a href="{{ url_for('auth.forget_password') }}" class="forgot_pw">Forgot password?</a>
                     </div>
 
                     <button type="submit" class="button">Login Now</button>
@@ -91,6 +91,30 @@
     </section>
 
     <script src="../../static/js/login.js"></script>
+    <!-- Gestion des messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alert);
+
+            // Fermer automatiquement après 5 secondes
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        });
+    </script>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 </body>
 
 </html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vérification du Code</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}" />
+</head>
+<body>
+<section class="home show">
+    <a href="#" class="nav_logo"><i class='bx bxs-baby-carriage'></i> Gestion Numérique des Actes de Naissance</a>
+    <div class="form_container">
+        <a href="{{ url_for('auth.forget_password') }}">
+            <i class="bx bx-x form_close"></i>
+        </a>
+        <div class="container mt-4">
+            <h2>🔐 Vérification du Code</h2>
+            <form action="{{ url_for('auth.verify_code') }}" method="POST">
+                <div class="mb-3">
+                    <label for="code" class="form-label">Entrez le code reçu :</label>
+                    <input type="text" class="form-control" name="code" id="code" required maxlength="6" pattern="\d{6}" title="Code à 6 chiffres">
+                </div>
+                <button type="submit" class="btn btn-primary">Vérifier</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+});
+</script>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
@@ -7,31 +7,27 @@
     <link rel="stylesheet" href="../../static/css/bootstrap.min.css">
     <link href="../../static/boxicons/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="../../static/css/mairie.css">
-    <title>ADMIN BORD</title>
-    <style>
-    </style>
+    <title>Tableau de bord - Mairie</title>
 </head>
 
 <body>
     <div class="sidebar">
-        <!-- Logo en haut de la sidebar -->
         <div class="logo">
             <img src="../../static/images/télécharger.jpg" alt="Logo" />
         </div>
 
         <ul class="menu">
-            <li><a href="#page2"><i class="bx bx-send"></i> Gestion des aéroports</a></li>
-            <li><a href="#page3"><i class="bx bx-buildings"></i> Gestion des company</a></li>
-            <li><a href="#page4"><i class="bx bx-user-circle"></i> Gestion des Utulisateurs</a></li>
-            <li><a href="#page5"><i class="bx bx-group"></i> Gestion des vols</a></li>
-            <li><a href="#page7"><i class="bx bx-bookmark"></i> Gestion des réservations</a></li>
-            <li><a href="#page8"><i class="bx bx-list-check"></i> Gestion des assignations</a></li>
+            <li><a href="#page2"><i class="bx bx-send"></i> Déclarations Reçues</a></li>
+            <li><a href="#page3"><i class="bx bx-file"></i> Actes de Naissance</a></li>
+            <li><a href="#page7"><i class="bx bx-bar-chart"></i> Statistiques</a></li>
+            <li><a href="#page4"><i class="bx bx-cog"></i> Paramètres</a></li>
+            <li><a href="#page5"><i class="bx bx-help-circle"></i> Aide</a></li>
         </ul>
 
         <ul class="navbar-nav ms-auto mb-2lg-0">
             <li>
-                <a style="font-size: 25px;" href="../deconnexion.php" class="btn btn-con">
-                    <i class='bx bx-log-in'></i> DECONNEXION
+                <a style="font-size: 18px;" href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
+                    <i class='bx bx-log-out'></i> Déconnexion
                 </a>
             </li>
         </ul>
@@ -39,121 +35,82 @@
 
     <div class="content">
         <div id="page1" class="page active">
-            <div class="container mt-4" style="text-align: center; font-size: 30px">
-                <h2 class="text-center">BIENVENUE sur la plateforme SIMRO_VOYAGE <strong>
-                    </strong> Dans cette interface Vous pouvez
-                    voire les reservation des different client et egalement ajouter des vols dans des pays different .
-                </h2><br>
+            <div class="container mt-4 text-center">
+                <h2>Bienvenue sur la plateforme de gestion des actes de naissance</h2>
+                <p>Interface pour traiter les déclarations, enregistrer les actes, visualiser les statistiques et configurer les paramètres.</p><br>
 
                 <div class="row">
-                    <!-- Carte Aéroports -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-primary mb-3">
+                        <div class="card text-white bg-primary mb-3 clickable" data-target="page2">
                             <div class="card-body">
-                                <h5 class="card-title" style="text-align: center; font-size: 30px"><i
-                                        class="bx bx-send"></i> Aéroports</h5>
-                                <p class="card-text">Nombre Total Enregistrer : <strong>
-                                    </strong></p>
+                                <h5 class="card-title text-center"><i class="bx bx-send"></i> Déclarations Reçues</h5>
+                                <p class="card-text">Total : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Carte Agences -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-success mb-3">
+                        <div class="card text-white bg-success mb-3 clickable" data-target="page3">
                             <div class="card-body">
-                                <h5 class="card-title" style="text-align: center; font-size: 30px"><i
-                                        class="bx bx-buildings"></i> Compay</h5>
-                                <p class="card-text">Nombre Total Enregistrer : <strong>
-                                        <?php echo $counts['agence'] ?? 0; ?>
-                                    </strong></p>
+                                <h5 class="card-title text-center"><i class="bx bx-file"></i> Actes de Naissance</h5>
+                                <p class="card-text">Total : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Carte Clients -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
+                        <div class="card text-white bg-warning mb-3 clickable" data-target="page7">
                             <div class="card-body">
-                                <h5 class="card-title" style="text-align: center; font-size: 30px"><i
-                                        class="bx bx-user-circle"></i> Clients</h5>
-                                <p class="card-text">Nombre Total Enregistrer : <strong>
-
-                                    </strong></p>
+                                <h5 class="card-title text-center"><i class="bx bx-bar-chart"></i> Statistiques</h5>
+                                <p class="card-text">Vue d'ensemble : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Carte Vols -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
+                        <div class="card text-white bg-info mb-3 clickable" data-target="page4">
                             <div class="card-body">
-                                <h5 class="card-title" style="text-align: center; font-size: 30px"><i
-                                        class="bx bx-group"></i> Vols</h5>
-                                <p class="card-text">Nombre Total Enregistrer : <strong>
-
-                                    </strong></p>
+                                <h5 class="card-title text-center"><i class="bx bx-cog"></i> Paramètres</h5>
+                                <p class="card-text">Configuration : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Carte Réservations -->
                     <div class="col-md-4">
-                        <div class="card text-white bg-info mb-3">
+                        <div class="card text-white bg-secondary mb-3 clickable" data-target="page5">
                             <div class="card-body">
-                                <h5 class="card-title" style="text-align: center; font-size: 30px"><i
-                                        class="bx bx-bookmark"></i> Réservations</h5>
-                                <p class="card-text">Nombre Total Enregistrer : <strong>
-                                    </strong></p>
+                                <h5 class="card-title text-center"><i class="bx bx-help-circle"></i> Aide</h5>
+                                <p class="card-text">Support disponible : <strong>--</strong></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Carte Assignations -->
-                    <div class="col-md-4">
-                        <div class="card text-white bg-secondary mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title" style="text-align: center; font-size: 30px"><i
-                                        class="bx bx-list-check"></i> Assignations</h5>
-                                <p class="card-text">Nombre Total Enregistrer : <strong>
-                                    </strong></p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
-        <!-- GESTION DES AÉROPORTS -->
-        <div id="page2" class="page">
-            <h1>Gestion des aéroports</h1>
 
+        <div id="page2" class="page">
+            <h1>Gestion des déclarations reçues</h1>
         </div>
 
         <div id="page3" class="page">
-            <h1>Gestion des agences</h1>
-
+            <h1>Gestion des actes de naissance</h1>
         </div>
 
-        <!-- GESTION DDES CLIENTS -->
         <div id="page4" class="page">
-            <h1>Gestion des Utulisateurs</h1>
-
+            <h1>Paramètres</h1>
         </div>
-        <!-- GESTION DES VOLS -->
+
         <div id="page5" class="page">
-            <h1>Liste des vols</h1>
+            <h1>Centre d'aide</h1>
         </div>
+
         <div id="page7" class="page">
-            <h1>Liste des reservation</h1>
+            <h1>Statistiques</h1>
         </div>
-        <!-- GESTION DS ASSIGNATIONS -->
-        <div id="page8" class="page">
-            <h1>Gestion des assignations</h1>
-
-        </div>
-
     </div>
-    <script src="../../static/js/mairie.js"></script>
+
+    <script src="../../static/js/mairie.js" ></script>
 </body>
 
 </html>

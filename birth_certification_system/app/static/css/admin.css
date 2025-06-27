@@ -1,830 +1,197 @@
-/* S'assurer que .page prend toute la hauteur */
-.page {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    min-height: 100%;
-    /* Cela permet à la page de remplir l'espace vertical */
-}
-
-/* S'assurer que le contenu remplit toute la hauteur restante */
-.content {
-    margin-left: 250px;
-    width: 100%;
-    flex-grow: 1;
-    min-height: 100vh;
-    /* Remplir toute la hauteur de la fenêtre */
-    overflow-y: auto;
-    /* Permet le défilement vertical si nécessaire */
-    padding: 20px;
-    background-color: rgb(220, 238, 242);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    /* Ajustez l'alignement si nécessaire */
-}
-
-.page.active {
-    display: block;
-    opacity: 1;
-    height: 100%;
-    width: 100%;
-    /* Assurer que la page active remplit l'espace disponible */
-}
-
-/* Ajoutez une règle pour s'assurer que les pages occupent toute la hauteur */
-.page {
-    height: 100%;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.page.active {
-    display: block;
-    opacity: 1;
-}
-
-/* Global Styles */
+/* ======== ROOT COLORS & FONT ======== */
 :root {
-    --primary-color: #007bff;
-    --hover-color: rgba(0, 91, 255, 0.1);
-    --background-color: rgb(17, 5, 52);
-    --button-hover-color: #45a049;
-    --text-color: white;
-    --border-color: #ccc;
-    --light-background: #f9f9f9;
-    --input-background: rgba(0, 0, 0, 0.1);
+    --primary: #0d6efd;
+    --secondary: #6c757d;
+    --success: #198754;
+    --warning: #ffc107;
+    --info: #0dcaf0;
+    --dark: #1e1e2f;
+    --light: #f8f9fa;
+    --text: #333;
+    --bg: #f4f6f9;
+    --hover-bg: rgba(255, 255, 255, 0.08);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --radius: 10px;
+    --font: 'Segoe UI', sans-serif;
 }
 
+/* ======== GLOBAL ======== */
 body {
     margin: 0;
-    padding: 0;
-    background-color: rgb(209, 226, 243);
-    font-family: system-ui;
+    font-family: var(--font);
+    background-color: var(--bg);
     display: flex;
     height: 100vh;
-    /* Désactive le défilement global */
+    overflow: hidden;
 }
 
+h1,
+h2 {
+    color: var(--text);
+}
+
+/* ======== SIDEBAR ======== */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
+    background-color: var(--dark);
     width: 250px;
     height: 100vh;
-    background-color: var(--background-color);
-    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+    padding: 20px 0;
+    position: fixed;
     overflow-y: auto;
-    transition: width 0.3s ease-in-out;
-    padding-top: 20px;
+    box-shadow: var(--shadow);
 }
 
-
-/* Styles pour la sidebar et les éléments de contenu */
-.logo {
+.sidebar .logo {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
 }
 
-.logo img {
-    width: 90%;
-    max-width: 90px;
+.sidebar .logo img {
+    width: 70px;
     height: auto;
+    border-radius: 50%;
+    border: 2px solid white;
 }
 
-
-.sidebar ul {
+.sidebar .menu {
+    list-style: none;
     padding: 0;
+    margin: 0;
 }
 
-.sidebar li {
-    list-style-type: none;
-    padding: 10px;
+.sidebar .menu li {
+    margin: 10px 0;
 }
 
-.sidebar li a {
-    color: white;
-    text-decoration: none;
-    font-size: 30px;
-    font-family: Arial, sans-serif;
+.sidebar .menu li a {
+    display: flex;
     align-items: center;
+    color: white;
+    padding: 12px 20px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background-color 0.2s ease-in-out;
 }
 
-.menu li:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.sidebar .menu li a i {
+    margin-right: 10px;
+    font-size: 18px;
 }
 
-/* Responsive Design */
+.sidebar .menu li a:hover,
+.sidebar .menu li a.active {
+    background-color: var(--hover-bg);
+    border-left: 4px solid var(--primary);
+}
+
+.navbar-nav {
+    margin-top: 40px;
+    padding: 0 20px;
+    list-style: none;
+}
+
+.navbar-nav li .btn-con {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    background-color: transparent;
+    border: 1px solid #f3940b;
+    color: #f3940b;
+    border-radius: var(--radius);
+    transition: background-color 0.3s ease;
+}
+
+.navbar-nav li .btn-con:hover {
+    background-color: #f3940b;
+    color: white;
+}
+
+/* ======== CONTENT ======== */
+.content {
+    margin-left: 250px;
+    padding: 30px;
+    width: calc(100% - 250px);
+    overflow-y: auto;
+}
+
+/* ======== PAGE STYLES ======== */
+.page {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.page.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ======== DASHBOARD CARDS ======== */
+.card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    transition: transform 0.2s ease;
+    cursor: default;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.card-text {
+    font-size: 14px;
+}
+
+/* Responsive for small devices */
 @media (max-width: 768px) {
     .sidebar {
         width: 100%;
-        position: relative;
         height: auto;
+        position: relative;
     }
 
     .content {
         margin-left: 0;
+        width: 100%;
+    }
+
+    .sidebar .menu li a {
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .sidebar .menu li a i {
+        margin-right: 0;
+    }
+
+    .navbar-nav li .btn-con {
+        font-size: 14px;
     }
 }
 
-
-
-
-#page1 {
-    background-color: transparent;
-}
-
-#page1 .bienvenue {
-    text-align: center;
-    font-size: 30px;
-}
-
-/* style de la page 2 */
-#page2 .add-user-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-#page2 .add-user-link i {
-    margin-right: 5px;
-    /* Espace entre l'icône et le texte */
-}
-
-#page2 .add-user-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page2 .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-#page2 .table th,
-#page2 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page2 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page2 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page2 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-#page2 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-}
-
-#page2 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-#page2 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page2 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-#page2 .search-container input[type="text"]:focus {
-    outline: none;
-}
-
-/* style de la page 3 */
-
-#page3 .add-group-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-#page3 .add-group-link i {
-    margin-right: 5px;
-    /* Espace entre l'icône et le texte */
-}
-
-#page3 .add-group-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page3 .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-#page3 .table th,
-#page3 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page3 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page3 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page3 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-}
-
-#page3 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-    font-size: 100px;
-}
-
-#page3 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-
-#page3 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page3 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-#page3 .search-container input[type="text"]:focus {
-    outline: none;
-}
-
-/* Style pour la page Paramètres */
-#page5 {
-    display: none;
-    /* Par défaut, la page est cachée */
-}
-
-#page5.active {
-    display: block;
-    /* Affichage de la page lorsque active */
-}
-
-.setting-item {
-    margin-bottom: 20px;
-}
-
-.setting-item label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.setting-item input[type="text"],
-.setting-item select,
-.setting-item input[type="checkbox"] {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
-/* Style pour la page Aide */
-#page6 {
-    display: none;
-    /* Par défaut, la page est cachée */
-}
-
-#page6.active {
-    display: block;
-    /* Affichage de la page lorsque active */
-}
-
-.help-container {
-    margin-top: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
-.help-container p {
-    margin: 0;
-}
-
-/* Style pour la page active */
-.page.active {
-    display: block;
-}
-
-
-
-.form-groupe {
-    text-align: center;
-    /* Aligner le contenu du formulaire au centre */
-}
-
-.image-container {
-    position: relative;
-    display: inline-block;
-}
-
-.image-container img {
-    width: 100px;
-    /* Ajustez selon vos besoins */
-    height: auto;
-    /* Ajustez selon vos besoins */
-}
-
-.image-container input[type="file"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.add-button {
-    position: absolute;
-    background-color: #4caf50;
-    color: white;
-    margin: 50px;
-    bottom: 260px;
-    text-align: center;
-    border-radius: 0 0 5px 5px;
-    cursor: pointer;
-    display: none;
-    /* Masquer le bouton par défaut */
-}
-
-.image-container:hover .add-button {
-    display: block;
-    /* Afficher le bouton au survol */
-}
-
-.add-button:hover {
-    background-color: #45a049;
-}
-
-#button {
-    color: white;
-    margin: 5px;
-    background-color: #45a049;
-
-}
-
-.btn-con {
-    color: #f3940b;
-    border-color: #f3940b;
-    transition: 1s;
-}
-
-.btn-con:hover,
-.btn-con:active {
-    color: white;
-    background-color: #f3940b;
-}
-
-/* Ajoutez d'autres styles selon vos besoins */
-.selectes {
-
-    text-align: center;
-    color: green;
-}
-
-.statut {
-    text-align: center;
-    color: red;
-}
-
-
-/* style de la page 4 */
-
-#page4 .add-group-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-#page4 .add-group-link i {
-    margin-right: 5px;
-    /* Espace entre l'icône et le texte */
-}
-
-#page4 .add-group-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page4.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-#page4 .table th,
-#page4 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page4 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page4 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page4 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-}
-
-#page4 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-    font-size: 100px;
-}
-
-#page4 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-
-#page4 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page4 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-#page4 .search-container input[type="text"]:focus {
-    outline: none;
-}
-
-
-/* style de la page 6 */
-
-#page6 .add-group-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-#page6 .add-group-link i {
-    margin-right: 5px;
-    /* Espace entre l'icône et le texte */
-}
-
-#page6 .add-group-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page6.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-#page6 .table th,
-#page6 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page6 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page6 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page6 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-}
-
-#page6 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-    font-size: 100px;
-}
-
-#page6 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-
-#page6 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page6 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-#page6 .search-container input[type="text"]:focus {
-    outline: none;
-}
-
-
-/* style de la page 6 */
-
-#page5 .add-group-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-#page5 .add-group-link i {
-    margin-right: 5px;
-    /* Espace entre l'icône et le texte */
-}
-
-#page5 .add-group-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page5.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-#page5 .table th,
-#page5 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page5 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page5 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page5 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-}
-
-#page5 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-    font-size: 100px;
-}
-
-#page5 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-
-#page5 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page5 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-#page5 .search-container input[type="text"]:focus {
-    outline: none;
-}
-
-/* style de la page 7 */
-#page7 .add-group-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-
-#page7 .add-group-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page7.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 25px;
-}
-
-#page7 .table th,
-#page7 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page7 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page7 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page7 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-}
-
-#page7 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-    font-size: 100px;
-}
-
-#page7 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-
-#page7 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page7 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-}
-
-#page7 .search-container input[type="text"]:focus {
-    outline: none;
-}
-
-
-/* style de la page 8 */
-
-#page8 .add-group-link {
-    display: inline-block;
-    margin-top: 20px;
-    text-decoration: none;
-    color: #007bff;
-    /* Couleur du lien */
-}
-
-#page8 .add-group-link i {
-    margin-right: 5px;
-    /* Espace entre l'icône et le texte */
-}
-
-#page8 .add-group-link:hover {
-    text-decoration: underline;
-    /* Souligner le lien au survol */
-}
-
-#page8.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 25px;
-}
-
-#page8 .table th,
-#page8 .table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-}
-
-#page8 .table th {
-    background-color: #f2f2f2;
-    /* Couleur de fond des en-têtes de colonne */
-}
-
-#page8 .table tbody tr:hover {
-    background-color: #f9f9f9;
-    /* Couleur de fond des lignes au survol */
-}
-
-#page8 .table td button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-}
-
-#page8 .table td button i {
-    color: #007bff;
-    /* Couleur de l'icône des boutons */
-    font-size: 100px;
-}
-
-#page8 .table td button:hover i {
-    color: #0056b3;
-    /* Couleur de l'icône des boutons au survol */
-}
-
-
-#page8 .search-container {
-    float: right;
-    margin-top: -40px;
-}
-
-#page8 .search-container input[type="text"] {
-    width: 200px;
-    padding: 10px;
-    margin-right: 20px;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translateY(-20px);
 }
 
-#page8 .search-container input[type="text"]:focus {
-    outline: none;
+.modal.show .modal-dialog {
+    transform: translateY(0);
 }
