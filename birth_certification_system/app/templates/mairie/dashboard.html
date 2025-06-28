@@ -24,13 +24,11 @@
             <li><a href="#page5"><i class="bx bx-help-circle"></i> Aide</a></li>
         </ul>
 
-        <ul class="navbar-nav ms-auto mb-2lg-0">
-            <li>
-                <a style="font-size: 18px;" href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
-                    <i class='bx bx-log-out'></i> Déconnexion
-                </a>
-            </li>
-        </ul>
+        <div class="logout-btn">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
+                <i class='bx bx-log-out'></i> Déconnexion
+            </a>
+        </div>
     </div>
 
     <div class="content">

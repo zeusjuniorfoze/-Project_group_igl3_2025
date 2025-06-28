@@ -37,7 +37,7 @@ class Utilisateur(db.Model):
 
     # Réinitialisation de mot de passe
     reset_code        = db.Column(db.String(10), nullable=True)  # Exemple : code à 6 chiffres ou alphanumérique
-    reset_code_expiry = db.Column(db.DateTime, nullable=True)
+    reset_code_expiry = db.Column(db.DateTime(timezone=True))
 
     # Lien avec un hôpital ou une mairie
     hopital_id        = db.Column(db.Integer, db.ForeignKey('hopitaux.id', ondelete='SET NULL'), nullable=True)
@@ -72,8 +72,8 @@ class Utilisateur(db.Model):
         return f"<Utilisateur {self.nom_utilisateur} ({self.role.value})>"
 
     def set_password(self, mot_de_passe):
-        """Hash le mot de passe avec bcrypt."""
-        self.mot_de_passe_hash = generate_password_hash(mot_de_passe).decode('utf-8')
+        """Hash le mot de passe avec Werkzeug."""
+        self.mot_de_passe_hash = generate_password_hash(mot_de_passe)
 
     def check_password(self, mot_de_passe):
         """Vérifie que le mot de passe saisi correspond au hash."""

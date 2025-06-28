@@ -15,47 +15,37 @@
 <body>
     <div class="sidebar">
         <div class="logo">
-            <img src="{{ url_for('static', filename='images/télécharger.jpg') }}" alt="Logo" />
+            <img src="../../static/images/télécharger.jpg" alt="Logo" />
         </div>
 
         <ul class="menu">
-            <li><a href="#page2"><i class="bx bx-send"></i> Déclarations Reçues</a></li>
-            <li><a href="#page3"><i class="bx bx-file"></i> Actes de Naissance</a></li>
+            <li><a href="#page2"><i class="bx bx-send"></i> Gestin des Déclarations</a></li>
             <li><a href="#page7"><i class="bx bx-bar-chart"></i> Statistiques</a></li>
             <li><a href="#page4"><i class="bx bx-cog"></i> Paramètres</a></li>
             <li><a href="#page5"><i class="bx bx-help-circle"></i> Aide</a></li>
         </ul>
 
-        <ul class="navbar-nav ms-auto mb-2lg-0">
-            <li>
-                <a style="font-size: 18px;" href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
-                    <i class='bx bx-log-out'></i> Déconnexion
-                </a>
-            </li>
-        </ul>
+        <div class="logout-btn">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
+                <i class='bx bx-log-out'></i> Déconnexion
+            </a>
+        </div>
     </div>
+
 
     <div class="content">
         <!-- Page principale -->
         <div id="page1" class="page active">
             <div class="container mt-4 text-center">
                 <h2>Bienvenue sur la plateforme de gestion des actes de naissance</h2>
-                <p>Interface pour traiter les déclarations, enregistrer les actes, visualiser les statistiques et configurer les paramètres.</p><br>
+                <p>Interface pour traiter les déclarations, enregistrer les actes, visualiser les statistiques et
+                    configurer les paramètres.</p><br>
 
                 <div class="row">
                     <div class="col-md-4">
                         <div class="card text-white bg-primary mb-3 clickable" data-target="page2">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-send"></i> Déclarations Reçues</h5>
-                                <p class="card-text">Total : <strong>--</strong></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card text-white bg-success mb-3 clickable" data-target="page3">
-                            <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-file"></i> Actes de Naissance</h5>
+                                <h5 class="card-title text-center"><i class="bx bx-send"></i>Gestion des déclarations</h5>
                                 <p class="card-text">Total : <strong>--</strong></p>
                             </div>
                         </div>
@@ -94,15 +84,10 @@
         <!-- Pages internes -->
         <div id="page2" class="page">
             <div class="container mt-4">
-                <h1>Gestion des déclarations reçues</h1>
+                <h1>Gestion des déclarations </h1>
             </div>
         </div>
 
-        <div id="page3" class="page">
-            <div class="container mt-4">
-                <h1>Gestion des actes de naissance</h1>
-            </div>
-        </div>
 
         <div id="page4" class="page">
             <div class="container mt-4">

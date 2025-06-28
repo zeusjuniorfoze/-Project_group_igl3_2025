@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 from flask_mail import Message
 import random, string, logging
-
+import time
 from ..config import Config
 from app.models import Utilisateur, RoleUtilisateur
 from app.database import db
@@ -40,6 +40,7 @@ def login_post():
 
     return redirect(url_for('auth.login'))
 
+# Alternative 1: Utilisation du module datetime natif (Python 3.2+)
 @auth_bp.route('/forgetpassword', methods=['GET', 'POST'])
 def forget_password():
     if request.method == 'POST':
@@ -48,19 +49,25 @@ def forget_password():
 
         if utilisateur:
             try:
-                # Générer code et expiration
-                reset_code = ''.join(random.choices(string.digits, k=6))
-                expiry = datetime.utcnow() + timedelta(minutes=30)
-
-                # Stocker le code EN CLAIR (ou son hash, mais pas les deux)
-                utilisateur.reset_code = reset_code  # Version en clair
-                # OU si vous voulez vraiment hasher:
-                # utilisateur.reset_code = generate_password_hash(reset_code)
+                # 1. Définir le décalage horaire pour le Cameroun (UTC+1)
+                cameroon_tz = timezone(timedelta(hours=1))
                 
-                utilisateur.reset_code_expiry = expiry
+                # 2. Générer le code
+                reset_code = ''.join(random.choices(string.digits, k=6))
+                
+                # 3. Utiliser l'heure locale avec fuseau horaire
+                now_local = datetime.now(cameroon_tz)
+                expiry_local = now_local + timedelta(minutes=30)
+                
+                # 4. Convertir en UTC pour le stockage
+                expiry_utc = expiry_local.astimezone(timezone.utc)
+                
+                # 5. Stockage dans la base
+                utilisateur.reset_code = reset_code
+                utilisateur.reset_code_expiry = expiry_utc
                 db.session.commit()
 
-                # Envoyer le code par email (le vrai code, pas le hash)
+                # 6. Envoi du mail avec l'heure locale
                 msg = Message(
                     subject="🔐 Code de vérification",
                     sender=Config.MAIL_DEFAULT_SENDER,
@@ -73,12 +80,13 @@ def forget_password():
                             {reset_code}
                         </div>
                         <p style="font-size: 12px; color: #7f8c8d;">
-                            ⏳ Ce code expire le {expiry.strftime('%d/%m/%Y à %H:%M')} UTC.
+                            ⏳ Ce code expire le {expiry_local.strftime('%d/%m/%Y à %H:%M')} (heure locale).
                         </p>
                     </div>
                     """
                 )
                 mail.send(msg)
+                
                 session['email_reset'] = email
                 flash("✅ Un code a été envoyé à votre adresse email.", "success")
                 return redirect(url_for('auth.verify_code'))
@@ -96,64 +104,72 @@ def forget_password():
 @auth_bp.route('/verify-code', methods=['GET', 'POST'])
 def verify_code():
     if request.method == 'POST':
-        code_saisi = request.form.get('code').strip()
+        code_saisi = request.form.get('code', '').strip()
         email = session.get('email_reset')
 
         if not email:
-            flash("Session expirée. Veuillez recommencer.", "danger")
+            flash("⏱️ Session expirée. Veuillez recommencer la procédure.", "danger")
             return redirect(url_for('auth.forget_password'))
 
         utilisateur = Utilisateur.query.filter_by(email=email).first()
-
+        
         if not utilisateur or not utilisateur.reset_code or not utilisateur.reset_code_expiry:
-            flash("❌ Code invalide ou expiré.", "danger")
+            flash("❌ Code invalide ou déjà utilisé.", "danger")
             return redirect(url_for('auth.forget_password'))
 
-        # Vérification expiration
-        if datetime.utcnow() > utilisateur.reset_code_expiry:
-            flash("⏳ Code expiré. Veuillez redemander un nouveau code.", "warning")
+        # Vérification de l'expiration avec gestion des fuseaux horaires
+        now_utc = datetime.now(timezone.utc)
+        
+        # S'assurer que reset_code_expiry est aussi timezone-aware
+        if utilisateur.reset_code_expiry.tzinfo is None:
+            # Si la date en base est naive, on la considère comme UTC
+            expiry_aware = utilisateur.reset_code_expiry.replace(tzinfo=timezone.utc)
+        else:
+            expiry_aware = utilisateur.reset_code_expiry
+            
+        if now_utc > expiry_aware:
+            flash("⌛ Le code a expiré. Veuillez en demander un nouveau.", "warning")
             return redirect(url_for('auth.forget_password'))
 
         # Gestion des tentatives
         nb_echecs = session.get('nb_echecs', 0)
         if nb_echecs >= 5:
-            flash("🚫 Trop de tentatives. Recommencez la procédure.", "danger")
+            flash("🔒 Trop de tentatives échouées. La procédure a été bloquée.", "danger")
+            utilisateur.reset_code = None
+            utilisateur.reset_code_expiry = None
+            db.session.commit()
+            session.pop('email_reset', None)
             return redirect(url_for('auth.forget_password'))
 
-        # Vérification du code (selon votre choix de stockage)
-        if utilisateur.reset_code == code_saisi:  # Si stocké en clair
-        # OU si vous avez hashé:
-        # if check_password_hash(utilisateur.reset_code, code_saisi):
+        if utilisateur.reset_code == code_saisi:
             session['email_verified'] = email
             session.pop('nb_echecs', None)
             
-            # Nettoyer le code après utilisation
             utilisateur.reset_code = None
             utilisateur.reset_code_expiry = None
             db.session.commit()
             
+            flash("✅ Code vérifié avec succès. Vous pouvez maintenant définir un nouveau mot de passe.", "success")
             return redirect(url_for('auth.reset_password'))
         else:
             session['nb_echecs'] = nb_echecs + 1
             tentatives_restantes = 5 - session['nb_echecs']
-            flash(f"❌ Code incorrect. Tentatives restantes: {tentatives_restantes}", "danger")
+            flash(f"❌ Code incorrect. Il vous reste {tentatives_restantes} tentative(s).", "danger")
 
     return render_template('auth/verifycode.html')
 
+
 @auth_bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
-    # Vérification de l'accès autorisé
     email = session.get('email_verified')
     if not email:
         flash("⛔ Session invalide. Veuillez recommencer la procédure.", "danger")
         return redirect(url_for('auth.forget_password'))
 
     if request.method == 'POST':
-        # Récupération des données du formulaire
         mot_de_passe = request.form.get('password', '').strip()
         confirmation = request.form.get('confirm_password', '').strip()
 
-        # Validation des mots de passe
         if not mot_de_passe or not confirmation:
             flash("❌ Veuillez remplir tous les champs.", "danger")
             return redirect(url_for('auth.reset_password'))
@@ -162,12 +178,10 @@ def reset_password():
             flash("❌ Les mots de passe ne correspondent pas.", "danger")
             return redirect(url_for('auth.reset_password'))
 
-        # Validation de la force du mot de passe
         if len(mot_de_passe) < 8:
             flash("🔒 Le mot de passe doit contenir au moins 8 caractères.", "warning")
             return redirect(url_for('auth.reset_password'))
 
-        # Recherche de l'utilisateur
         utilisateur = Utilisateur.query.filter_by(email=email).first()
         if not utilisateur:
             flash("❌ Utilisateur introuvable.", "danger")
@@ -175,15 +189,13 @@ def reset_password():
             return redirect(url_for('auth.forget_password'))
 
         try:
-            # Mise à jour du mot de passe
-            utilisateur.mot_de_passe_hash = generate_password_hash(mot_de_passe)
+            utilisateur.set_password(mot_de_passe)
             utilisateur.reset_code = None
             utilisateur.reset_code_expiry = None
-            utilisateur.mis_a_jour_le = datetime.utcnow()  # Mise à jour du timestamp
+            utilisateur.mis_a_jour_le = datetime.now(timezone.utc)
             
             db.session.commit()
             
-            # Nettoyage de la session et redirection
             session.pop('email_verified', None)
             flash("✅ Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.", "success")
             return redirect(url_for('auth.login'))
@@ -194,6 +206,7 @@ def reset_password():
             flash("❌ Une erreur est survenue lors de la réinitialisation. Veuillez réessayer.", "danger")
 
     return render_template('auth/reset_password.html')
+
 
 @auth_bp.route('/logout')
 def logout():

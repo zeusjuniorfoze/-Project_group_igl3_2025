@@ -1,10 +1,12 @@
 import os
 from dotenv import load_dotenv
+import time
 
 # Charger les variables d'environnement depuis .env
 load_dotenv()
 
 class Config:
+    TIMEZONE_OFFSET = time.localtime().tm_gmtoff  # Offset en secondes
     """Configuration de l'application Flask."""
 
     # Paramètres de connexion MySQL (XAMPP)
