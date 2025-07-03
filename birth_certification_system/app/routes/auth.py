@@ -26,6 +26,8 @@ def login_post():
     if utilisateur and utilisateur.check_password(mot_de_passe):
         session['utilisateur_id'] = utilisateur.id
         session['role'] = utilisateur.role.value
+        session['nom_utilisateur'] = utilisateur.nom_utilisateur
+        session['hopital_id'] = utilisateur.hopital_id
 
         if utilisateur.role == RoleUtilisateur.ADMIN:
             return redirect(url_for('admin.dashboard'))
@@ -40,7 +42,7 @@ def login_post():
 
     return redirect(url_for('auth.login'))
 
-# Alternative 1: Utilisation du module datetime natif (Python 3.2+)
+
 @auth_bp.route('/forgetpassword', methods=['GET', 'POST'])
 def forget_password():
     if request.method == 'POST':

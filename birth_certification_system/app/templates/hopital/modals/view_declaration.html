@@ -1,0 +1,93 @@
+<!-- Modal Voir Déclaration -->
+<div class="modal fade" id="modalVoirDeclaration{{ dossier.id }}" tabindex="-1" aria-labelledby="modalVoirLabel{{ dossier.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalVoirLabel{{ dossier.id }}">
+                    <i class='bx bx-show-alt'></i> Détails de la Déclaration
+                </h5>
+                <button type="button" class="btn-close bg-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Infos de l'enfant -->
+                <h5 class="text-primary"><i class='bx bx-child'></i> Informations de l'enfant</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Nom :</strong> {{ dossier.nom_enfant }}</div>
+                    <div class="col-md-4"><strong>Prénom :</strong> {{ dossier.prenom_enfant }}</div>
+                    <div class="col-md-4"><strong>Sexe :</strong> {{ dossier.sexe_enfant }}</div>
+                    <div class="col-md-4"><strong>Date de naissance :</strong> {{ dossier.date_naissance }}</div>
+                    <div class="col-md-4"><strong>Heure :</strong> {{ dossier.heure_naissance }}</div>
+                    <div class="col-md-4"><strong>Lieu :</strong> {{ dossier.lieu_naissance }}</div>
+                </div>
+
+                <hr>
+                <!-- Infos de la mère -->
+                <h5 class="text-primary"><i class='bx bx-female'></i> Mère</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Nom :</strong> {{ dossier.nom_mere }}</div>
+                    <div class="col-md-4"><strong>Prénom :</strong> {{ dossier.prenom_mere }}</div>
+                    <div class="col-md-4"><strong>Téléphone :</strong> {{ dossier.numero_mere }}</div>
+                    <div class="col-md-4"><strong>Email :</strong> {{ dossier.email_mere }}</div>
+                    <div class="col-md-4"><strong>Date de naissance :</strong> {{ dossier.date_naissance_mere }}</div>
+                    <div class="col-md-4"><strong>Lieu :</strong> {{ dossier.lieu_naissance_mere }}</div>
+                    <div class="col-md-4"><strong>Nationalité :</strong> {{ dossier.nationalite_mere }}</div>
+                    <div class="col-md-4"><strong>Profession :</strong> {{ dossier.profession_mere }}</div>
+                    <div class="col-md-4"><strong>Pièce d’identité :</strong> {{ dossier.type_piece_mere }} - {{ dossier.numero_piece_mere }}</div>
+                </div>
+
+                <hr>
+                <!-- Infos du père -->
+                <h5 class="text-primary"><i class='bx bx-male'></i> Père</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Nom :</strong> {{ dossier.nom_pere }}</div>
+                    <div class="col-md-4"><strong>Prénom :</strong> {{ dossier.prenom_pere }}</div>
+                    <div class="col-md-4"><strong>Téléphone :</strong> {{ dossier.numero_pere }}</div>
+                    <div class="col-md-4"><strong>Email :</strong> {{ dossier.email_pere }}</div>
+                    <div class="col-md-4"><strong>Date de naissance :</strong> {{ dossier.date_naissance_pere }}</div>
+                    <div class="col-md-4"><strong>Lieu :</strong> {{ dossier.lieu_naissance_pere }}</div>
+                    <div class="col-md-4"><strong>Nationalité :</strong> {{ dossier.nationalite_pere }}</div>
+                    <div class="col-md-4"><strong>Profession :</strong> {{ dossier.profession_pere }}</div>
+                    <div class="col-md-4"><strong>Pièce d’identité :</strong> {{ dossier.type_piece_pere }} - {{ dossier.numero_piece_pere }}</div>
+                </div>
+
+                <hr>
+                <!-- Déclarant -->
+                <h5 class="text-primary"><i class='bx bx-user-pin'></i> Déclarant</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Nom :</strong> {{ dossier.nom_declarant }}</div>
+                    <div class="col-md-4"><strong>Prénom :</strong> {{ dossier.prenom_declarant }}</div>
+                    <div class="col-md-4"><strong>Lien :</strong> {{ dossier.lien_parente_declarant }}</div>
+                    <div class="col-md-6"><strong>Pièce :</strong> {{ dossier.type_piece_declarant }} - {{ dossier.numero_piece_declarant }}</div>
+                </div>
+
+                <hr>
+                <!-- Certificat médical -->
+                <h5 class="text-primary"><i class='bx bx-file'></i> Certificat médical</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Numéro :</strong> {{ dossier.numero_certificat_medical }}</div>
+                    <div class="col-md-4"><strong>Date :</strong> {{ dossier.date_certificat_medical }}</div>
+                    <div class="col-md-4"><strong>Médecin :</strong> {{ dossier.nom_medecin }}</div>
+                </div>
+
+                <hr>
+                <!-- Autres informations -->
+                <h5 class="text-primary"><i class='bx bx-info-circle'></i> Informations supplémentaires</h5>
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Statut :</strong> {{ dossier.statut.value }}</div>
+                    <div class="col-md-4"><strong>Date soumission :</strong> {{ dossier.date_soumission }}</div>
+                    {% if dossier.date_validation %}
+                    <div class="col-md-4"><strong>Date validation :</strong> {{ dossier.date_validation }}</div>
+                    {% endif %}
+                    {% if dossier.motif_rejet %}
+                    <div class="col-md-12"><strong>Motif de rejet :</strong> {{ dossier.motif_rejet }}</div>
+                    {% endif %}
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class='bx bx-x'></i> Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>

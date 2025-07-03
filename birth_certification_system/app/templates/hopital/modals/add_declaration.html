@@ -1,0 +1,183 @@
+<style>
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .input-group-text {
+        background-color: #e9ecef;
+        border-right: 0;
+    }
+
+    .form-control {
+        border-left: 0;
+    }
+</style>
+
+
+<!-- Modal Ajouter Déclaration -->
+<div class="modal fade" id="modalAjoutDeclaration" tabindex="-1" aria-labelledby="modalAjoutDeclarationLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('hopital.ajouter_declaration') }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalAjoutDeclarationLabel"><i class='bx bx-plus-circle'></i> Ajouter une Déclaration</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Enfant -->
+                    <h5 class="mb-3 text-primary"><i class='bx bx-child'></i> Informations sur l'enfant</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label><i class='bx bx-user'></i> Nom</label>
+                            <input type="text" name="nom_enfant" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label><i class='bx bx-user'></i> Prénom</label>
+                            <input type="text" name="prenom_enfant" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label><i class='bx bx-user-pin'></i> Sexe</label>
+                            <select name="sexe_enfant" class="form-select" required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="Masculin">Masculin</option>
+                                <option value="Féminin">Féminin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label><i class='bx bx-calendar'></i> Date de naissance</label>
+                            <input type="date" name="date_naissance" class="form-control" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label><i class='bx bx-time'></i> Heure de naissance</label>
+                            <input type="time" name="heure_naissance" class="form-control" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label><i class='bx bx-map'></i> Lieu de naissance</label>
+                            <input type="text" name="lieu_naissance" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Accordéon -->
+                    <div class="accordion" id="accordionDeclaration">
+                        <!-- Mère -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingMere">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMere">
+                                    <i class='bx bx-female me-2'></i> Informations sur la mère
+                                </button>
+                            </h2>
+                            <div id="collapseMere" class="accordion-collapse collapse" data-bs-parent="#accordionDeclaration">
+                                <div class="accordion-body row">
+                                    {% for champ, icon, type in [
+                                        ('nom_mere', 'bx-user', 'text'),
+                                        ('prenom_mere', 'bx-user', 'text'),
+                                        ('numero_mere', 'bx-phone', 'text'),
+                                        ('email_mere', 'bx-envelope', 'email'),
+                                        ('date_naissance_mere', 'bx-calendar', 'date'),
+                                        ('lieu_naissance_mere', 'bx-map', 'text'),
+                                        ('nationalite_mere', 'bx-flag', 'text'),
+                                        ('profession_mere', 'bx-briefcase', 'text'),
+                                        ('type_piece_mere', 'bx-id-card', 'text'),
+                                        ('numero_piece_mere', 'bx-barcode', 'text'),
+                                    ] %}
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx {{ icon }}'></i> {{ champ.replace('_', ' ').title() }}</label>
+                                        <input type="{{ type }}" name="{{ champ }}" class="form-control">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Père -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingPere">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePere">
+                                    <i class='bx bx-male me-2'></i> Informations sur le père
+                                </button>
+                            </h2>
+                            <div id="collapsePere" class="accordion-collapse collapse" data-bs-parent="#accordionDeclaration">
+                                <div class="accordion-body row">
+                                    {% for champ, icon, type in [
+                                        ('nom_pere', 'bx-user', 'text'),
+                                        ('prenom_pere', 'bx-user', 'text'),
+                                        ('numero_pere', 'bx-phone', 'text'),
+                                        ('email_pere', 'bx-envelope', 'email'),
+                                        ('date_naissance_pere', 'bx-calendar', 'date'),
+                                        ('lieu_naissance_pere', 'bx-map', 'text'),
+                                        ('nationalite_pere', 'bx-flag', 'text'),
+                                        ('profession_pere', 'bx-briefcase', 'text'),
+                                        ('type_piece_pere', 'bx-id-card', 'text'),
+                                        ('numero_piece_pere', 'bx-barcode', 'text'),
+                                    ] %}
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx {{ icon }}'></i> {{ champ.replace('_', ' ').title() }}</label>
+                                        <input type="{{ type }}" name="{{ champ }}" class="form-control">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Déclarant -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingDeclarant">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDeclarant">
+                                    <i class='bx bx-user-pin me-2'></i> Informations sur le déclarant
+                                </button>
+                            </h2>
+                            <div id="collapseDeclarant" class="accordion-collapse collapse" data-bs-parent="#accordionDeclaration">
+                                <div class="accordion-body row">
+                                    {% for champ, icon, type in [
+                                        ('nom_declarant', 'bx-user', 'text'),
+                                        ('prenom_declarant', 'bx-user', 'text'),
+                                        ('lien_parente_declarant', 'bx-link', 'text'),
+                                        ('type_piece_declarant', 'bx-id-card', 'text'),
+                                        ('numero_piece_declarant', 'bx-barcode', 'text'),
+                                    ] %}
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx {{ icon }}'></i> {{ champ.replace('_', ' ').title() }}</label>
+                                        <input type="{{ type }}" name="{{ champ }}" class="form-control">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Certificat Médical -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingCertif">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCertif">
+                                    <i class='bx bx-file me-2'></i> Certificat Médical
+                                </button>
+                            </h2>
+                            <div id="collapseCertif" class="accordion-collapse collapse" data-bs-parent="#accordionDeclaration">
+                                <div class="accordion-body row">
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-barcode'></i> Numéro du certificat</label>
+                                        <input type="text" name="numero_certificat_medical" class="form-control">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-calendar'></i> Date du certificat</label>
+                                        <input type="date" name="date_certificat_medical" class="form-control">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label><i class='bx bx-user'></i> Nom du médecin</label>
+                                        <input type="text" name="nom_medecin" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- end accordion -->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class='bx bx-x'></i> Annuler</button>
+                    <button type="submit" class="btn btn-success"><i class='bx bx-check'></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

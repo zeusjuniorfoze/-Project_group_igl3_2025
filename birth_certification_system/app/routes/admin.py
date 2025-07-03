@@ -1,12 +1,15 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash ,session
 from werkzeug.security import generate_password_hash
-from app.models import Utilisateur ,Mairie,Hopital, RoleUtilisateur
+from app.models import Utilisateur ,Mairie,Hopital, RoleUtilisateur,ActeNaissance
 from app.database import db
 import random , string
 import logging
 from app import mail
 from app.config import Config
 from flask_mail import Message
+import json
+from sqlalchemy import extract, func
+from datetime import datetime
 
 # pour generer un mot de passe automatiquement
 def generate_random_password(length=12):
@@ -81,17 +84,55 @@ admin_bp = Blueprint('admin', __name__)
 # Route d'affichage du dashboard
 @admin_bp.route('/admin')
 def dashboard():
+    # Données brutes
     mairies = Mairie.query.all()
     hopitaux = Hopital.query.all()
-    utilisateurs = Utilisateur.query.all()  # si tu les listes
+    utilisateurs = Utilisateur.query.all()
+
+    # --- Statistiques Actes par mois (12 derniers mois) ---
+    now = datetime.now()
+    actes = (
+        db.session.query(
+            extract('month', ActeNaissance.date_enregistrement).label('mois'),
+            func.count(ActeNaissance.id)
+        )
+        .group_by('mois')
+        .order_by('mois')
+        .all()
+    )
+
+    mois_liste = []
+    nb_actes_par_mois = []
+
+    mois_noms = ['Janv', 'Févr', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
+    for mois, count in actes:
+        mois_liste.append(mois_noms[int(mois) - 1])
+        nb_actes_par_mois.append(count)
+
+    # --- Statistiques des rôles des utilisateurs ---
+    role_counts = (
+        db.session.query(
+            Utilisateur.role,
+            func.count(Utilisateur.id)
+        )
+        .group_by(Utilisateur.role)
+        .all()
+    )
+
+    roles_noms = [role.value for role, _ in role_counts]
+    roles_valeurs = [count for _, count in role_counts]
 
     return render_template(
         'admin/dashboard.html',
         mairies=mairies,
         hopitaux=hopitaux,
-        utilisateurs=utilisateurs
+        utilisateurs=utilisateurs,
+        actes_months=json.dumps(mois_liste),
+        actes_data=json.dumps(nb_actes_par_mois),
+        roles_labels=json.dumps(roles_noms),
+        roles_data=json.dumps(roles_valeurs),
+        now=datetime.now()
     )
-
 
 # Ajouter un utilisateur (déjà donné par toi)
 @admin_bp.route('/utilisateur/ajouter', methods=['POST'])

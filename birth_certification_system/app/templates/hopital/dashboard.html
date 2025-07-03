@@ -45,8 +45,9 @@
                     <div class="col-md-4">
                         <div class="card text-white bg-primary mb-3 clickable" data-target="page2">
                             <div class="card-body">
-                                <h5 class="card-title text-center"><i class="bx bx-send"></i>Gestion des déclarations</h5>
-                                <p class="card-text">Total : <strong>--</strong></p>
+                                <h5 class="card-title text-center"><i class="bx bx-send"></i>Gestion des déclarations
+                                </h5>
+                                <p class="card-text">Total : <strong>10</strong></p>
                             </div>
                         </div>
                     </div>
@@ -81,12 +82,87 @@
             </div>
         </div>
 
-        <!-- Pages internes -->
-        <div id="page2" class="page">
-            <div class="container mt-4">
-                <h1>Gestion des déclarations </h1>
+        <section id="page2" class="page container py-4">
+            <!-- Titre + bouton -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <h2 class="mb-2"><i class='bx bx-book-heart'></i> Gestion des Déclarations</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutDeclaration">
+                    <i class='bx bx-plus-medical'></i> Ajouter une Déclaration
+                </button>
             </div>
-        </div>
+
+            <!-- Filtres -->
+            <div class="row g-3 align-items-center mb-4">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="rechercheDeclaration"
+                        placeholder="🔍 Rechercher par nom, lieu...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filtreStatut">
+                        <option value="">🎯 Filtrer par statut</option>
+                        <option value="EN_ATTENTE">En attente</option>
+                        <option value="VALIDE">Validé</option>
+                        <option value="REJETE">Rejeté</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control" id="filtreDate" placeholder="📅 Filtrer par date">
+                </div>
+            </div>
+
+            <!-- Cartes -->
+            {% for dossier in declarations %}
+            <div class="col-md-4 mb-4 declaration-card" data-statut="{{ dossier.statut }}"
+                data-nom="{{ dossier.nom_enfant }} {{ dossier.prenom_enfant }}"
+                data-date="{{ dossier.date_naissance }}">
+
+                <div class="card shadow h-100">
+                    <img src="{{ url_for('static', filename='images/télécharger.png') }}" class="card-img-top"
+                        alt="Image bébé">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">👶 {{ dossier.nom_enfant }} {{ dossier.prenom_enfant }}</h5>
+                        <p class="card-text small">
+                            <strong>Sexe :</strong> {{ dossier.sexe_enfant }}<br>
+                            <strong>Date :</strong> {{ dossier.date_naissance.strftime('%d/%m/%Y') }}<br>
+                            <strong>Lieu :</strong> {{ dossier.lieu_naissance }}<br>
+                            <strong>Mère :</strong> {{ dossier.nom_mere }} {{ dossier.prenom_mere }}<br>
+                            <strong>Père :</strong> {{ dossier.nom_pere or '---' }} {{ dossier.prenom_pere or '' }}
+                        </p>
+                        <span class="badge 
+                    {% if dossier.statut == 'VALIDE' %}bg-success
+                    {% elif dossier.statut == 'REJETE' %}bg-danger
+                    {% else %}bg-warning text-dark
+                    {% endif %}">
+                            {{ dossier.statut }}
+                        </span>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalVoirDeclaration{{ dossier.id }}">
+                                <i class='bx bx-show'></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalEditDeclaration{{ dossier.id }}">
+                                <i class='bx bx-edit'></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('hopital.supprimer_declaration', id=dossier.id) }}"
+                                class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Confirmer la suppression ?')">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ces deux includes DOIVENT être dans la boucle -->
+            {% include 'hopital/modals/view_declaration.html' %}
+            {% include 'hopital/modals/edit_declaration.html' %}
+            {% endfor %}
+
+        </section>
 
 
         <div id="page4" class="page">
@@ -110,6 +186,30 @@
 
     <!-- Script de navigation -->
     <script src="../../static/js/hopital.js"></script>
+    <script src="../../static/js/bootstrap.bundle.min.js"></script>
+    <!-- Gestion des messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        });
+    </script>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 </body>
 
 </html>
