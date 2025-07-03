@@ -1,0 +1,289 @@
+<style>
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .input-group-text {
+        background-color: #e9ecef;
+        border-right: 0;
+    }
+
+    .form-control {
+        border-left: 0;
+    }
+</style>
+
+<!-- Modal Modifier Déclaration -->
+<div class="modal fade" id="modalEditDeclaration{{ dossier.id }}" tabindex="-1"
+    aria-labelledby="modalEditDeclarationLabel{{ dossier.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('hopital.modifier_declaration', dossier_id=dossier.id) }}">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="modalEditDeclarationLabel{{ dossier.id }}">
+                        <i class='bx bx-edit'></i> Modifier la Déclaration
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Champ caché pour l'ID du dossier -->
+                    <input type="hidden" name="dossier_id" value="{{ dossier.id }}">
+
+                    <!-- Enfant -->
+                    <h5 class="mb-3 text-primary"><i class='bx bx-child'></i> Informations sur l'enfant</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label><i class='bx bx-user'></i> Nom</label>
+                            <input type="text" name="nom_enfant" class="form-control" value="{{ dossier.nom_enfant }}"
+                                required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label><i class='bx bx-user'></i> Prénom</label>
+                            <input type="text" name="prenom_enfant" class="form-control"
+                                value="{{ dossier.prenom_enfant }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label><i class='bx bx-user-pin'></i> Sexe</label>
+                            <select name="sexe_enfant" class="form-select" required>
+                                <option value="">-- Sélectionner --</option>
+                                <option value="Masculin" {% if dossier.sexe_enfant=='Masculin' %}selected{% endif %}>
+                                    Masculin</option>
+                                <option value="Féminin" {% if dossier.sexe_enfant=='Féminin' %}selected{% endif %}>
+                                    Féminin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label><i class='bx bx-calendar'></i> Date de naissance</label>
+                            <input type="date" name="date_naissance" class="form-control"
+                                value="{{ dossier.date_naissance.strftime('%Y-%m-%d') if dossier.date_naissance else '' }}"
+                                required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label><i class='bx bx-time'></i> Heure de naissance</label>
+                            <input type="time" name="heure_naissance" class="form-control"
+                                value="{{ dossier.heure_naissance.strftime('%H:%M') if dossier.heure_naissance else '' }}"
+                                required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label><i class='bx bx-map'></i> Lieu de naissance</label>
+                            <input type="text" name="lieu_naissance" class="form-control"
+                                value="{{ dossier.lieu_naissance }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Accordéon -->
+                    <div class="accordion" id="accordionDeclarationEdit">
+                        <!-- Mère -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingMereEdit">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseMereEdit">
+                                    <i class='bx bx-female me-2'></i> Informations sur la mère
+                                </button>
+                            </h2>
+                            <div id="collapseMereEdit" class="accordion-collapse collapse show"
+                                data-bs-parent="#accordionDeclarationEdit">
+                                <div class="accordion-body row">
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-user'></i> Nom</label>
+                                        <input type="text" name="nom_mere" class="form-control"
+                                            value="{{ dossier.nom_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-user'></i> Prénom</label>
+                                        <input type="text" name="prenom_mere" class="form-control"
+                                            value="{{ dossier.prenom_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-phone'></i> Téléphone</label>
+                                        <input type="text" name="numero_mere" class="form-control"
+                                            value="{{ dossier.numero_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-envelope'></i> Email</label>
+                                        <input type="email" name="email_mere" class="form-control"
+                                            value="{{ dossier.email_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-calendar'></i> Date de naissance</label>
+                                        <input type="date" name="date_naissance_mere" class="form-control"
+                                            value="{{ dossier.date_naissance_mere.strftime('%Y-%m-%d') if dossier.date_naissance_mere else '' }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-map'></i> Lieu de naissance</label>
+                                        <input type="text" name="lieu_naissance_mere" class="form-control"
+                                            value="{{ dossier.lieu_naissance_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-flag'></i> Nationalité</label>
+                                        <input type="text" name="nationalite_mere" class="form-control"
+                                            value="{{ dossier.nationalite_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-briefcase'></i> Profession</label>
+                                        <input type="text" name="profession_mere" class="form-control"
+                                            value="{{ dossier.profession_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-id-card'></i> Type de pièce</label>
+                                        <input type="text" name="type_piece_mere" class="form-control"
+                                            value="{{ dossier.type_piece_mere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-barcode'></i> Numéro de pièce</label>
+                                        <input type="text" name="numero_piece_mere" class="form-control"
+                                            value="{{ dossier.numero_piece_mere }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Père -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingPereEdit">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapsePereEdit">
+                                    <i class='bx bx-male me-2'></i> Informations sur le père
+                                </button>
+                            </h2>
+                            <div id="collapsePereEdit" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionDeclarationEdit">
+                                <div class="accordion-body row">
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-user'></i> Nom</label>
+                                        <input type="text" name="nom_pere" class="form-control"
+                                            value="{{ dossier.nom_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-user'></i> Prénom</label>
+                                        <input type="text" name="prenom_pere" class="form-control"
+                                            value="{{ dossier.prenom_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-phone'></i> Téléphone</label>
+                                        <input type="text" name="numero_pere" class="form-control"
+                                            value="{{ dossier.numero_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-envelope'></i> Email</label>
+                                        <input type="email" name="email_pere" class="form-control"
+                                            value="{{ dossier.email_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-calendar'></i> Date de naissance</label>
+                                        <input type="date" name="date_naissance_pere" class="form-control"
+                                            value="{{ dossier.date_naissance_pere.strftime('%Y-%m-%d') if dossier.date_naissance_pere else '' }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-map'></i> Lieu de naissance</label>
+                                        <input type="text" name="lieu_naissance_pere" class="form-control"
+                                            value="{{ dossier.lieu_naissance_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-flag'></i> Nationalité</label>
+                                        <input type="text" name="nationalite_pere" class="form-control"
+                                            value="{{ dossier.nationalite_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-briefcase'></i> Profession</label>
+                                        <input type="text" name="profession_pere" class="form-control"
+                                            value="{{ dossier.profession_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-id-card'></i> Type de pièce</label>
+                                        <input type="text" name="type_piece_pere" class="form-control"
+                                            value="{{ dossier.type_piece_pere }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-barcode'></i> Numéro de pièce</label>
+                                        <input type="text" name="numero_piece_pere" class="form-control"
+                                            value="{{ dossier.numero_piece_pere }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Déclarant -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingDeclarantEdit">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseDeclarantEdit">
+                                    <i class='bx bx-user-pin me-2'></i> Informations sur le déclarant
+                                </button>
+                            </h2>
+                            <div id="collapseDeclarantEdit" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionDeclarationEdit">
+                                <div class="accordion-body row">
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-user'></i> Nom du déclarant</label>
+                                        <input type="text" name="nom_declarant" class="form-control"
+                                            value="{{ dossier.nom_declarant }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-user'></i> Prénom du déclarant</label>
+                                        <input type="text" name="prenom_declarant" class="form-control"
+                                            value="{{ dossier.prenom_declarant }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-link'></i> Lien de parenté</label>
+                                        <input type="text" name="lien_parente_declarant" class="form-control"
+                                            value="{{ dossier.lien_parente_declarant }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-id-card'></i> Type de pièce</label>
+                                        <input type="text" name="type_piece_declarant" class="form-control"
+                                            value="{{ dossier.type_piece_declarant }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-barcode'></i> Numéro de pièce</label>
+                                        <input type="text" name="numero_piece_declarant" class="form-control"
+                                            value="{{ dossier.numero_piece_declarant }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Certificat Médical -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingCertifEdit">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseCertifEdit">
+                                    <i class='bx bx-file me-2'></i> Certificat Médical
+                                </button>
+                            </h2>
+                            <div id="collapseCertifEdit" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionDeclarationEdit">
+                                <div class="accordion-body row">
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-barcode'></i> Numéro du certificat</label>
+                                        <input type="text" name="numero_certificat_medical" class="form-control"
+                                            value="{{ dossier.numero_certificat_medical }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label><i class='bx bx-calendar'></i> Date du certificat</label>
+                                        <input type="date" name="date_certificat_medical" class="form-control"
+                                            value="{{ dossier.date_certificat_medical.strftime('%Y-%m-%d') if dossier.date_certificat_medical else '' }}">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label><i class='bx bx-user'></i> Nom du médecin</label>
+                                        <input type="text" name="nom_medecin" class="form-control"
+                                            value="{{ dossier.nom_medecin }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- end accordion -->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class='bx bx-x'></i>
+                        Annuler</button>
+                    <button type="submit" class="btn btn-warning"><i class='bx bx-save'></i> Mettre à jour</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

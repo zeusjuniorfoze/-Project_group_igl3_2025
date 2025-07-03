@@ -83,6 +83,7 @@
         </div>
 
         <section id="page2" class="page container py-4">
+            {% include 'hopital/modals/add_declaration.html' %}
             <!-- Titre + bouton -->
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
                 <h2 class="mb-2"><i class='bx bx-book-heart'></i> Gestion des Déclarations</h2>
@@ -100,10 +101,12 @@
                 <div class="col-md-3">
                     <select class="form-select" id="filtreStatut">
                         <option value="">🎯 Filtrer par statut</option>
-                        <option value="EN_ATTENTE">En attente</option>
-                        <option value="VALIDE">Validé</option>
-                        <option value="REJETE">Rejeté</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Validé">Validé</option>
+                        <option value="Rejeté">Rejeté</option>
+                        <option value="Acte délivré">Acte délivré</option>
                     </select>
+
                 </div>
                 <div class="col-md-3">
                     <input type="date" class="form-control" id="filtreDate" placeholder="📅 Filtrer par date">
@@ -129,12 +132,15 @@
                             <strong>Père :</strong> {{ dossier.nom_pere or '---' }} {{ dossier.prenom_pere or '' }}
                         </p>
                         <span class="badge 
-                    {% if dossier.statut == 'VALIDE' %}bg-success
-                    {% elif dossier.statut == 'REJETE' %}bg-danger
-                    {% else %}bg-warning text-dark
-                    {% endif %}">
+    {% if dossier.statut == 'Validé' %}bg-success
+    {% elif dossier.statut == 'Rejeté' %}bg-danger
+    {% elif dossier.statut == 'En attente' %}bg-warning text-dark
+    {% elif dossier.statut == 'Acte délivré' %}bg-primary
+    {% else %}bg-secondary
+    {% endif %}">
                             {{ dossier.statut }}
                         </span>
+
 
                         <div class="d-flex justify-content-between mt-3">
                             <button class="btn btn-info btn-sm" data-bs-toggle="modal"
@@ -161,6 +167,9 @@
             {% include 'hopital/modals/view_declaration.html' %}
             {% include 'hopital/modals/edit_declaration.html' %}
             {% endfor %}
+            <div id="messageAucunResultat" class="alert alert-warning text-center" style="display: none;">
+                😕 Aucun résultat ne correspond à votre recherche ou vos filtres.
+            </div>
 
         </section>
 

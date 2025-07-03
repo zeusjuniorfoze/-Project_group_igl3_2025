@@ -1,8 +1,5 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash , request
-
-
-from datetime import datetime
-
+from datetime import datetime , time
 from app.models import DossierNaissance, Utilisateur , db
 
 hopital_bp = Blueprint('hopital', __name__)
@@ -137,6 +134,79 @@ def ajouter_declaration():
         print(e)
         flash("Erreur lors de l'ajout de la déclaration. Veuillez vérifier les données.", "danger")
         return redirect(url_for('hopital.dashboard'))
+    
+@hopital_bp.route('/modifier_declaration/<int:dossier_id>', methods=['POST'])
+def modifier_declaration(dossier_id):
+    dossier = DossierNaissance.query.get_or_404(dossier_id)
+    
+    try:
+        # Mise à jour des informations sur l'enfant
+        dossier.nom_enfant = request.form.get('nom_enfant')
+        dossier.prenom_enfant = request.form.get('prenom_enfant')
+        dossier.sexe_enfant = request.form.get('sexe_enfant')
+        
+        # Conversion des dates et heures
+        if request.form.get('date_naissance'):
+            dossier.date_naissance = datetime.strptime(request.form.get('date_naissance'), '%Y-%m-%d').date()
+        if request.form.get('heure_naissance'):
+            dossier.heure_naissance = time.fromisoformat(request.form.get('heure_naissance'))
+        
+        dossier.lieu_naissance = request.form.get('lieu_naissance')
+        
+        # Mise à jour des informations sur la mère
+        dossier.nom_mere = request.form.get('nom_mere')
+        dossier.prenom_mere = request.form.get('prenom_mere')
+        dossier.numero_mere = request.form.get('numero_mere')
+        dossier.email_mere = request.form.get('email_mere')
+        
+        if request.form.get('date_naissance_mere'):
+            dossier.date_naissance_mere = datetime.strptime(request.form.get('date_naissance_mere'), '%Y-%m-%d').date()
+        dossier.lieu_naissance_mere = request.form.get('lieu_naissance_mere')
+        dossier.nationalite_mere = request.form.get('nationalite_mere')
+        dossier.profession_mere = request.form.get('profession_mere')
+        dossier.type_piece_mere = request.form.get('type_piece_mere')
+        dossier.numero_piece_mere = request.form.get('numero_piece_mere')
+        
+        # Mise à jour des informations sur le père
+        dossier.nom_pere = request.form.get('nom_pere')
+        dossier.prenom_pere = request.form.get('prenom_pere')
+        dossier.numero_pere = request.form.get('numero_pere')
+        dossier.email_pere = request.form.get('email_pere')
+        
+        if request.form.get('date_naissance_pere'):
+            dossier.date_naissance_pere = datetime.strptime(request.form.get('date_naissance_pere'), '%Y-%m-%d').date()
+        dossier.lieu_naissance_pere = request.form.get('lieu_naissance_pere')
+        dossier.nationalite_pere = request.form.get('nationalite_pere')
+        dossier.profession_pere = request.form.get('profession_pere')
+        dossier.type_piece_pere = request.form.get('type_piece_pere')
+        dossier.numero_piece_pere = request.form.get('numero_piece_pere')
+        
+        # Mise à jour des informations sur le déclarant
+        dossier.nom_declarant = request.form.get('nom_declarant')
+        dossier.prenom_declarant = request.form.get('prenom_declarant')
+        dossier.lien_parente_declarant = request.form.get('lien_parente_declarant')
+        dossier.type_piece_declarant = request.form.get('type_piece_declarant')
+        dossier.numero_piece_declarant = request.form.get('numero_piece_declarant')
+        
+        # Mise à jour du certificat médical
+        dossier.numero_certificat_medical = request.form.get('numero_certificat_medical')
+        
+        if request.form.get('date_certificat_medical'):
+            dossier.date_certificat_medical = datetime.strptime(request.form.get('date_certificat_medical'), '%Y-%m-%d').date()
+        
+        dossier.nom_medecin = request.form.get('nom_medecin')
+        
+        # Sauvegarde en base de données
+        db.session.commit()
+        
+        flash("✅ Déclaration mise à jour avec succès!", "success")
+    
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ Erreur lors de la mise à jour: {str(e)}", "danger")
+    
+    return redirect(url_for('hopital.dashboard'))
+
     
 @hopital_bp.route('/supprimer_declaration/<int:id>', methods=['POST'])
 def supprimer_declaration(id):
