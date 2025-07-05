@@ -28,6 +28,7 @@ def login_post():
         session['role'] = utilisateur.role.value
         session['nom_utilisateur'] = utilisateur.nom_utilisateur
         session['hopital_id'] = utilisateur.hopital_id
+        session['mairie_id'] = utilisateur.mairie_id
 
         if utilisateur.role == RoleUtilisateur.ADMIN:
             return redirect(url_for('admin.dashboard'))

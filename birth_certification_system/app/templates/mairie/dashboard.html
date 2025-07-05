@@ -35,14 +35,15 @@
         <div id="page1" class="page active">
             <div class="container mt-4 text-center">
                 <h2>Bienvenue sur la plateforme de gestion des actes de naissance</h2>
-                <p>Interface pour traiter les déclarations, enregistrer les actes, visualiser les statistiques et configurer les paramètres.</p><br>
+                <p>Interface pour traiter les déclarations, enregistrer les actes, visualiser les statistiques et
+                    configurer les paramètres.</p><br>
 
                 <div class="row">
                     <div class="col-md-4">
                         <div class="card text-white bg-primary mb-3 clickable" data-target="page2">
                             <div class="card-body">
                                 <h5 class="card-title text-center"><i class="bx bx-send"></i> Déclarations Reçues</h5>
-                                <p class="card-text">Total : <strong>10</strong></p>
+                                <p class="card-text">Total : <strong>{{ declarations|length }}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -87,9 +88,118 @@
             </div>
         </div>
 
-        <div id="page2" class="page">
-            <h1>Gestion des déclarations reçues</h1>
+       <section id="page2" class="page container py-4">
+    {% include 'mairie/modals/add_declaration.html' %}
+
+    <!-- Titre + bouton -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h2 class="mb-4"><i class='bx bx-transfer'></i> Déclarations transférées à votre mairie</h2>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutDeclaration" title="Ajouter une nouvelle déclaration">
+            <i class='bx bx-plus-medical'></i> Ajouter une Déclaration
+        </button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row g-3 align-items-center mb-4 border-bottom pb-3">
+        <div class="col-md-4">
+            <input type="text" class="form-control" id="rechercheDeclaration" placeholder="🔍 Rechercher par nom, lieu...">
         </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filtreStatut">
+                <option value="">🎯 Filtrer par statut</option>
+                <option value="En attente">En attente</option>
+                <option value="Validé">Validé</option>
+                <option value="Rejeté">Rejeté</option>
+                <option value="Acte délivré">Acte délivré</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="date" class="form-control" id="filtreDate" placeholder="📅 Filtrer par date">
+        </div>
+    </div>
+
+    <div class="row">
+        {% for dossier in declarations %}
+        <div class="col-md-4 mb-4 declaration-card"
+                data-statut="{{ dossier.statut }}"
+                data-nom="{{ dossier.nom_enfant }} {{ dossier.prenom_enfant }}"
+                data-date="{{ dossier.date_naissance }}">
+
+            <div class="card shadow h-100">
+                <img src="{{ url_for('static', filename='images/télécharger (1).png') }}" class="card-img-top" alt="Image bébé">
+                <!-- Exemple image dynamique selon sexe :
+                <img src="{{ url_for('static', filename='images/bebe_garcon.png') if dossier.sexe_enfant == 'Masculin' else url_for('static', filename='images/bebe_fille.png') }}" class="card-img-top" alt="Image bébé"> 
+                -->
+
+                <div class="card-body">
+                    <h5 class="card-title text-primary">👶 {{ dossier.nom_enfant }} {{ dossier.prenom_enfant }}</h5>
+                    <p class="card-text small">
+                        <strong>Sexe :</strong> {{ dossier.sexe_enfant }}<br>
+                        <strong>Date :</strong> {{ dossier.date_naissance.strftime('%d/%m/%Y') }}<br>
+                        <strong>Lieu :</strong> {{ dossier.lieu_naissance }}<br>
+                        <strong>Mère :</strong> {{ dossier.nom_mere }} {{ dossier.prenom_mere }}<br>
+                        <strong>Père :</strong> {{ dossier.nom_pere or '---' }} {{ dossier.prenom_pere or '' }}
+                    </p>
+
+                    <span class="badge 
+                        {% if dossier.statut == StatutDossier.VALIDE %}bg-success
+                        {% elif dossier.statut == StatutDossier.REJETE %}bg-danger
+                        {% elif dossier.statut == StatutDossier.EN_ATTENTE %}bg-warning text-dark
+                        {% elif dossier.statut == StatutDossier.ACTE_DELIVRE %}bg-primary
+                        {% else %}bg-secondary
+                        {% endif %}">
+                        {{ dossier.statut.value }}
+                    </span>
+
+                    <div class="d-flex justify-content-between mt-3 flex-wrap gap-1">
+                        <!-- Bouton Voir -->
+                        <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalVoirDeclaration{{ dossier.id }}" title="Voir les détails">
+                            <i class='bx bx-show'></i>
+                        </button>
+
+                        <!-- Bouton Modifier -->
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalEditDeclaration{{ dossier.id }}" title="Modifier la déclaration">
+                            <i class='bx bx-edit'></i>
+                    </button>
+
+                        <!-- Bouton Valider -->
+                        <button type="submit" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalvaliderDossier{{ dossier.id }}" title="Valider cette déclaration">
+                            <i class='bx bx-check'></i>
+                        </button>
+
+                        <!-- Bouton Générer Acte -->
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalGenererActe{{ dossier.id }}"
+                            {% if dossier.statut != StatutDossier.VALIDE %}
+                                disabled title="Le dossier doit être validé pour générer l'acte"
+                            {% else %}
+                                title="Générer l'acte de naissance"
+                            {% endif %}>
+                            <i class='bx bx-file-blank'></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals inclus dans la boucle -->
+        {% include 'mairie/modals/view_declaration.html' %}
+        {% include 'mairie/modals/valider_declaration.html' %}
+        {% include 'mairie/modals/edit_declaration.html' %}
+        {% include 'mairie/modals/generate_acte.html' %}
+        {% endfor %}
+    </div>
+
+    <!-- Message si aucun résultat -->
+    <div id="messageAucunResultat" class="alert alert-warning text-center" style="display: none;">
+        😕 Aucun résultat ne correspond à votre recherche ou vos filtres.
+    </div>
+</section>
+
+
 
         <div id="page3" class="page">
             <h1>Gestion des actes de naissance</h1>
@@ -108,7 +218,31 @@
         </div>
     </div>
 
-    <script src="../../static/js/mairie.js" ></script>
+    <script src="../../static/js/mairie.js"></script>
+    <script src="../../static/js/bootstrap.bundle.min.js"></script>
+    <!-- Gestion des messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        });
+    </script>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
 </body>
 
 </html>

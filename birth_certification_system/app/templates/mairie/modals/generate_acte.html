@@ -1,0 +1,119 @@
+<style>
+    .border-bottom {
+        border-bottom: 1px solid #000 !important;
+    }
+
+    input.border-0:focus {
+        outline: none;
+        box-shadow: none;
+        border-bottom: 1px solid #000;
+    }
+</style>
+<!-- Modal style certificat avec icônes -->
+<div class="modal fade" id="modalGenererActe{{ dossier.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="" method="POST">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class='bx bx-file-blank'></i> Générer l'Acte de Naissance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="border p-4" style="border: 1px solid #ccc; font-family: 'Georgia', serif;">
+                        <h5 class="text-center mb-2 text-uppercase">
+                            <strong><i class='bx bx-building-house'></i> Centre d’État Civil</strong><br>
+                            <small>Civil Status Registration Centre</small>
+                        </h5>
+
+                        <h4 class="text-center mb-3 text-uppercase">
+                            <strong><i class='bx bx-child'></i> Acte de Naissance</strong><br>
+                            <small><strong><i class='bx bx-duplicate'></i> Birth Certificate</strong></small>
+                        </h4>
+
+                        <p class="text-end"><strong><i class='bx bx-hash'></i> N°</strong>
+                            <input type="text" name="numero_acte" value="234/huarrds/bpl01"
+                                class="border-0 border-bottom" style="width: 200px;">
+                        </p>
+
+                        <!-- Enfant -->
+                        <p><i class='bx bx-user'></i> <strong>Nom de l’enfant :</strong>
+                            <input type="text" name="nom_enfant" value="Dzot Junior Paul Junior"
+                                class="border-0 border-bottom" style="width: 70%;">
+                        </p>
+                        <p><i class='bx bx-calendar'></i> <strong>Date de naissance :</strong>
+                            <input type="text" name="date_naissance" value="28 novembre 2001"
+                                class="border-0 border-bottom" style="width: 50%;">
+                        </p>
+                        <p><i class='bx bx-time'></i> <strong>Heure de naissance :</strong>
+                            <input type="text" name="heure_naissance" value="19h15min" class="border-0 border-bottom"
+                                style="width: 40%;">
+                        </p>
+                        <p><i class='bx bx-time'></i> <strong>Sexe de l'enfant</strong>
+                            <input type="text" name="heure_naissance" value="19h15min" class="border-0 border-bottom"
+                                style="width: 40%;">
+                        </p>
+                        <p><i class='bx bx-map'></i> <strong>Lieu de naissance :</strong>
+                            <input type="text" name="lieu_naissance" value="Hôpital Laquintinie de Douala"
+                                class="border-0 border-bottom" style="width: 60%;">
+                        </p>
+
+                        <!-- Père -->
+                        <h6 class="text-primary mt-4"><i class='bx bx-male'></i> Père</h6>
+                        <p><strong><i class='bx bx-user'></i> Nom :</strong>
+                            <input type="text" name="nom_pere" value="Dzot Rockaniel Emmanuel"
+                                class="border-0 border-bottom" style="width: 60%;">
+                        </p>
+                        <p><i class='bx bx-map'></i> <strong>Lieu de naissance :</strong>
+                            <input type="text" name="lieu_naissance_pere" value="Douala" class="border-0 border-bottom"
+                                style="width: 30%;">
+                        </p>
+                        <p><i class='bx bx-briefcase'></i> <strong>Profession :</strong>
+                            <input type="text" name="profession_pere" value="Aide Comptable"
+                                class="border-0 border-bottom" style="width: 40%;">
+                        </p>
+                        <p><i class='bx bx-map-pin'></i> <strong>Domicile :</strong>
+                            <input type="text" name="domicile_pere" value="Douala" class="border-0 border-bottom"
+                                style="width: 40%;">
+                        </p>
+
+                        <!-- Mère -->
+                        <h6 class="text-primary mt-4"><i class='bx bx-female'></i> Mère</h6>
+                        <p><strong><i class='bx bx-user'></i> Nom :</strong>
+                            <input type="text" name="nom_mere" value="Tchakoun Clarisse" class="border-0 border-bottom"
+                                style="width: 60%;">
+                        </p>
+                        <p><i class='bx bx-map'></i> <strong>Lieu de naissance :</strong>
+                            <input type="text" name="lieu_naissance_mere" value="Douala" class="border-0 border-bottom"
+                                style="width: 30%;">
+                        </p>
+                        <p><i class='bx bx-briefcase'></i> <strong>Profession :</strong>
+                            <input type="text" name="profession_mere" value="Ménagère" class="border-0 border-bottom"
+                                style="width: 40%;">
+                        </p>
+                        <p><i class='bx bx-map-pin'></i> <strong>Domicile :</strong>
+                            <input type="text" name="domicile_mere" value="Douala" class="border-0 border-bottom"
+                                style="width: 40%;">
+                        </p>
+
+                        <!-- Autres -->
+                        <h6 class="text-primary mt-4"><i class='bx bx-home'></i> Informations supplémentaires</h6>
+                        <p><i class='bx bx-map-pin'></i> <strong>Dresse le </strong>
+                            <input type="date" name="domicile" value="Douala" class="border-0 border-bottom"
+                                style="width: 40%;">
+                        </p>
+                    </div>
+                    <!--Zonne suplementaire-->
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                        <i class='bx bx-x'></i> Annuler
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class='bx bx-printer'></i> Générer l'Acte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

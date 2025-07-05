@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -132,14 +133,15 @@
                             <strong>Père :</strong> {{ dossier.nom_pere or '---' }} {{ dossier.prenom_pere or '' }}
                         </p>
                         <span class="badge 
-    {% if dossier.statut == 'Validé' %}bg-success
-    {% elif dossier.statut == 'Rejeté' %}bg-danger
-    {% elif dossier.statut == 'En attente' %}bg-warning text-dark
-    {% elif dossier.statut == 'Acte délivré' %}bg-primary
+    {% if dossier.statut == StatutDossier.VALIDE %}bg-success
+    {% elif dossier.statut == StatutDossier.REJETE %}bg-danger
+    {% elif dossier.statut == StatutDossier.EN_ATTENTE %}bg-warning text-dark
+    {% elif dossier.statut == StatutDossier.ACTE_DELIVRE %}bg-primary
     {% else %}bg-secondary
     {% endif %}">
-                            {{ dossier.statut }}
+                            {{ dossier.statut.value }}
                         </span>
+
 
 
                         <div class="d-flex justify-content-between mt-3">
@@ -147,10 +149,18 @@
                                 data-bs-target="#modalVoirDeclaration{{ dossier.id }}">
                                 <i class='bx bx-show'></i>
                             </button>
+
                             <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalEditDeclaration{{ dossier.id }}">
                                 <i class='bx bx-edit'></i>
                             </button>
+
+                            <!-- Bouton de transfert -->
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalTransfererDossier{{ dossier.id }}">
+                                <i class='bx bx-transfer'></i> Transférer
+                            </button>
+
                             <form method="POST" action="{{ url_for('hopital.supprimer_declaration', id=dossier.id) }}"
                                 class="d-inline">
                                 <button type="submit" class="btn btn-danger btn-sm"
@@ -166,6 +176,7 @@
             <!-- Ces deux includes DOIVENT être dans la boucle -->
             {% include 'hopital/modals/view_declaration.html' %}
             {% include 'hopital/modals/edit_declaration.html' %}
+            {% include 'hopital/modals/transfer_declaration.html' %}
             {% endfor %}
             <div id="messageAucunResultat" class="alert alert-warning text-center" style="display: none;">
                 😕 Aucun résultat ne correspond à votre recherche ou vos filtres.

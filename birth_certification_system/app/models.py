@@ -166,6 +166,7 @@ class DossierNaissance(db.Model):
     valide_par_utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), nullable=True)
 
     date_soumission = db.Column(db.DateTime, default=datetime.utcnow)
+    date_transfert = db.Column(db.DateTime, default=datetime.utcnow)
     date_validation = db.Column(db.DateTime, nullable=True)
     motif_rejet = db.Column(db.String(500), nullable=True)
 

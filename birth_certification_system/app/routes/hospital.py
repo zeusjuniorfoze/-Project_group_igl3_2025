@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash , request
 from datetime import datetime , time
-from app.models import DossierNaissance, Utilisateur , db
+from app.models import DossierNaissance, Utilisateur , db , Mairie , StatutDossier
+from flask_mail import Message
+import logging
+from ..config import Config
+from .. import mail
 
 hopital_bp = Blueprint('hopital', __name__)
 
@@ -14,6 +18,7 @@ def dashboard():
     # Récupère l'utilisateur connecté
     utilisateur_id = session['utilisateur_id']
     utilisateur = Utilisateur.query.get(utilisateur_id)
+    mairies = Mairie.query.all()
 
     if not utilisateur or not utilisateur.hopital_id:
         flash("Accès refusé. Vous n'êtes pas lié à un hôpital.", "danger")
@@ -22,7 +27,7 @@ def dashboard():
     # Filtrer les déclarations pour l'hôpital lié à l'utilisateur
     declarations = DossierNaissance.query.filter_by(hopital_id=utilisateur.hopital_id).all()
 
-    return render_template('hopital/dashboard.html', declarations=declarations)
+    return render_template('hopital/dashboard.html', declarations=declarations , mairies=mairies,StatutDossier=StatutDossier)
 
 
 @hopital_bp.route('/ajouter_declaration', methods=['POST'])
@@ -215,3 +220,66 @@ def supprimer_declaration(id):
     db.session.commit()
     flash("Déclaration supprimée avec succès.", "success")
     return redirect(url_for('hopital.dashboard'))
+
+def send_transfert_email(dossier, mairie):
+    """Envoie un email à la mère pour l'informer du transfert à une mairie."""
+    try:
+        if not dossier.email_mere:
+            return  # Pas d'email à envoyer
+
+        msg = Message(
+            subject=f"📬 Déclaration transférée à la mairie de {mairie.nom}",  # <-- Correction ici (nom au lieu de nom_mairie)
+            sender=Config.MAIL_DEFAULT_SENDER,
+            recipients=[dossier.email_mere],
+            charset='utf-8'
+        )
+
+        msg.body = f"""👋 Bonjour {dossier.prenom_mere} {dossier.nom_mere},
+
+Votre déclaration de naissance pour l'enfant **{dossier.prenom_enfant} {dossier.nom_enfant}** a été transférée avec succès à la mairie suivante :
+
+🏛️ **Mairie :** {mairie.nom}
+📍 **Localisation :** {mairie.localisation}  
+📞 **Téléphone :** {mairie.numero_telephone if hasattr(mairie, 'numero_telephone') else 'Non renseigné'}
+📧 **Email :** {mairie.email_contact if hasattr(mairie, 'email_contact') else 'Non renseigné'}
+
+📌 Pour finaliser la procédure, veuillez vous rendre à la mairie accompagnée du père de l'enfant, avec :
+- Vos cartes nationales d'identité (père et mère)
+- Vos actes de naissance
+
+Merci de le faire dans les plus brefs délais pour l'établissement de l'acte de naissance.
+
+Bien cordialement,  
+L'équipe administrative
+"""
+
+        mail.send(msg)
+    except Exception as e:
+        logging.error(f"Erreur lors de l'envoi de l'email de transfert : {str(e)}")
+
+@hopital_bp.route('/declaration/<int:id>/transferer', methods=['POST'])
+def transferer_declaration(id):
+    dossier = DossierNaissance.query.get_or_404(id)
+    mairie_id = request.form.get('mairie_id')
+
+    if mairie_id:
+        mairie = Mairie.query.get(mairie_id)
+        if not mairie:
+            flash("Mairie non trouvée.", "danger")
+            return redirect(url_for('hopital.dashboard'))  # <-- Correction ici
+
+        dossier.mairie_id = int(mairie_id)
+        dossier.statut = StatutDossier.EN_ATTENTE
+        dossier.date_transfert = datetime.utcnow()
+
+        try:
+            db.session.commit()
+            send_transfert_email(dossier, mairie)
+            flash("Déclaration transférée avec succès et email envoyé à la mère.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash("Erreur lors du transfert : " + str(e), "danger")
+    else:
+        flash("Veuillez sélectionner une mairie.", "danger")
+
+    return redirect(url_for('hopital.dashboard'))  # <-- Correction ici

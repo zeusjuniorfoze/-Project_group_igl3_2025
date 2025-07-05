@@ -1,0 +1,37 @@
+<!-- Modal de validation -->
+<div class="modal fade" id="modalvaliderDossier{{ dossier.id }}" tabindex="-1" aria-labelledby="modalLabel{{ dossier.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('mairie.valider_declaration', id=dossier.id) }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLabel{{ dossier.id }}">
+                        <i class='bx bx-check-shield'></i> Validation de la déclaration
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Souhaitez-vous valider la déclaration de : <strong>{{ dossier.prenom_enfant }} {{ dossier.nom_enfant }}</strong></p>
+                    <p><strong>Date de naissance :</strong> {{ dossier.date_naissance.strftime('%d/%m/%Y') }}</p>
+
+                    <div class="mb-3">
+                        <label for="statutSelect{{ dossier.id }}" class="form-label">Choisir le statut</label>
+                        <select class="form-select" id="statutSelect{{ dossier.id }}" name="statut" required>
+                            <option value="">🎯 Choisir le statut</option>
+                            <option value="Validé">✅ Validé</option>
+                            <option value="Rejeté">❌ Rejeté</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="motifRejet{{ dossier.id }}" class="form-label">Motif (en cas de rejet)</label>
+                        <textarea name="motif_rejet" id="motifRejet{{ dossier.id }}" class="form-control" rows="3" placeholder="Ex: Dossier incomplet, erreur de date..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Confirmer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

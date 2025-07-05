@@ -66,32 +66,61 @@ document.addEventListener("DOMContentLoaded", function () {
     mettreLienActifSidebar(initialPage);
 
     
-    const searchInput = document.getElementById("rechercheDeclaration");
-        const statutFilter = document.getElementById("filtreStatut");
-        const dateFilter = document.getElementById("filtreDate");
-        const cards = document.querySelectorAll(".declaration-card");
-
-        function filtrer() {
-            const texte = searchInput.value.toLowerCase();
-            const statut = statutFilter.value;
-            const date = dateFilter.value;
-
-            cards.forEach(card => {
-                const nom = card.dataset.nom.toLowerCase();
-                const cardStatut = card.dataset.statut;
-                const cardDate = card.dataset.date;
-
-                const correspondNom = nom.includes(texte);
-                const correspondStatut = !statut || cardStatut === statut;
-                const correspondDate = !date || cardDate === date;
-
-                card.style.display = (correspondNom && correspondStatut && correspondDate) ? "block" : "none";
+     // Gestion des clics sur les cartes (liens cliquables)
+    document.querySelectorAll('.card-link').forEach(card => {
+        card.addEventListener('click', function () {
+            const target = this.getAttribute('data-target');
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
             });
-        }
+            document.querySelector(target).classList.add('active');
+        });
+    });
 
-        searchInput.addEventListener("input", filtrer);
-        statutFilter.addEventListener("change", filtrer);
-        dateFilter.addEventListener("change", filtrer);
+    // 🔍 Filtres et recherche en temps réel
+    const inputRecherche = document.getElementById("rechercheDeclaration");
+    const selectStatut = document.getElementById("filtreStatut");
+    const inputDate = document.getElementById("filtreDate");
+    const cartes = document.querySelectorAll(".declaration-card");
+    const messageAucun = document.getElementById("messageAucunResultat");
+
+    function filtrerCartes() {
+        const recherche = inputRecherche.value.toLowerCase().trim();
+        const statut = selectStatut.value;
+        const date = inputDate.value;
+        let auMoinsUneVisible = false;
+
+        cartes.forEach((carte) => {
+            const nom = carte.dataset.nom.toLowerCase();
+            const statutCarte = carte.dataset.statut;
+            const dateCarte = carte.dataset.date;
+
+            let visible = true;
+
+            if (recherche && !nom.includes(recherche)) {
+                visible = false;
+            }
+
+            if (statut && statutCarte !== statut) {
+                visible = false;
+            }
+
+
+            if (date && dateCarte !== date) {
+                visible = false;
+            }
+
+            carte.style.display = visible ? "block" : "none";
+            if (visible) auMoinsUneVisible = true;
+        });
+
+        // Afficher ou masquer le message "aucun résultat"
+        messageAucun.style.display = auMoinsUneVisible ? "none" : "block";
+    }
+
+    inputRecherche.addEventListener("input", filtrerCartes);
+    selectStatut.addEventListener("change", filtrerCartes);
+    inputDate.addEventListener("change", filtrerCartes);
 });
 
 /**
