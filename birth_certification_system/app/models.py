@@ -183,18 +183,36 @@ class ActeNaissance(db.Model):
     numero_acte = db.Column(db.String(100), unique=True, nullable=False)
     date_enregistrement = db.Column(db.DateTime, default=datetime.utcnow)
     lieu_enregistrement = db.Column(db.String(100), nullable=False)
+
+    # Enfant
     nom_complet_enfant = db.Column(db.String(200), nullable=False)
     sexe_enfant = db.Column(db.String(10), nullable=False)
     date_naissance_enfant = db.Column(db.Date, nullable=False)
     heure_naissance_enfant = db.Column(db.Time, nullable=False)
     lieu_naissance_enfant = db.Column(db.String(100), nullable=False)
+
+    # Mère
     nom_complet_mere = db.Column(db.String(200), nullable=False)
     nationalite_mere = db.Column(db.String(50), nullable=True)
+    lieu_naissance_mere = db.Column(db.String(100), nullable=True)
+    profession_mere = db.Column(db.String(100), nullable=True)
+    domicile_mere = db.Column(db.String(100), nullable=True)
+
+    # Père
     nom_complet_pere = db.Column(db.String(200), nullable=True)
     nationalite_pere = db.Column(db.String(50), nullable=True)
+    lieu_naissance_pere = db.Column(db.String(100), nullable=True)
+    profession_pere = db.Column(db.String(100), nullable=True)
+    domicile_pere = db.Column(db.String(100), nullable=True)
+
+    # Déclarant
     nom_complet_declarant = db.Column(db.String(200), nullable=True)
     lien_parente_declarant = db.Column(db.String(50), nullable=True)
 
+    # Informations supplémentaires
+    dresse_le = db.Column(db.Date, nullable=True)
+
+    # Relations
     dossier_naissance_id = db.Column(db.Integer, db.ForeignKey('dossiers_naissance.id', ondelete='CASCADE'), unique=True, nullable=False)
     mairie_id = db.Column(db.Integer, db.ForeignKey('mairies.id', ondelete='RESTRICT'), nullable=False)
     genere_par_utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id', ondelete='RESTRICT'), nullable=False)
@@ -204,6 +222,7 @@ class ActeNaissance(db.Model):
 
     def __repr__(self):
         return f"<ActeNaissance {self.numero_acte} pour {self.nom_complet_enfant}>"
+
 
 
 class JournalAudit(db.Model):

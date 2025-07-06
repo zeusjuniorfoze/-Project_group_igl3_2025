@@ -1,9 +1,12 @@
 from flask import render_template, session, redirect, url_for, flash , Blueprint ,request
-from app.models import DossierNaissance  , db ,StatutDossier
+from app.models import DossierNaissance  , db ,StatutDossier ,ActeNaissance
 from datetime import datetime , time
 from flask_mail import Message
 from .. import mail 
-from ..config import Config
+from ..config import Config,os
+import pdfkit
+import re
+
 mairie_bp = Blueprint('mairie', __name__)
 
 @mairie_bp.route('/dashboard')
@@ -16,7 +19,7 @@ def dashboard():
     # Récupération des déclarations avec jointure pour vérification
     declarations = DossierNaissance.query.filter_by(mairie_id=mairie_id).all()
 
-    return render_template("mairie/dashboard.html",declarations=declarations,StatutDossier=StatutDossier)
+    return render_template("mairie/dashboard.html",declarations=declarations,StatutDossier=StatutDossier,current_date=datetime.utcnow() )
 
 @mairie_bp.route('/ajouter_declaration', methods=['POST'])
 def ajouter_declaration():
@@ -312,3 +315,155 @@ def valider_declaration(id):
         flash(f"❌ Erreur lors de la mise à jour : {str(e)}", "danger")
 
     return redirect(url_for('mairie.dashboard'))
+
+@mairie_bp.route('/declaration/<int:id>/generer-acte', methods=['POST'])
+def generer_acte(id):
+    dossier = DossierNaissance.query.get_or_404(id)
+
+    # Vérifier que le dossier est validé
+    if dossier.statut != StatutDossier.VALIDE:
+        flash("❌ Le dossier doit être validé avant de générer l'acte.", "danger")
+        return redirect(url_for('mairie.dashboard'))
+
+    try:
+        numero_acte = request.form.get('numero_acte')
+        if not numero_acte:
+            flash("❌ Le numéro d'acte est requis.", "danger")
+            return redirect(url_for('mairie.dashboard'))
+
+        date_etablissement = datetime.now().date()
+        acte_existant = ActeNaissance.query.filter_by(
+            numero_acte=numero_acte,
+            mairie_id=dossier.mairie_id
+        ).first()
+
+        infos_acte = {
+            "numero_acte": numero_acte,
+            "date_enregistrement": date_etablissement,
+            "lieu_enregistrement": dossier.lieu_naissance,
+            "nom_complet_enfant": f"{dossier.nom_enfant} {dossier.prenom_enfant}",
+            "sexe_enfant": dossier.sexe_enfant,
+            "date_naissance_enfant": dossier.date_naissance,
+            "heure_naissance_enfant": dossier.heure_naissance,
+            "lieu_naissance_enfant": dossier.lieu_naissance,
+            "nom_complet_mere": f"{dossier.nom_mere} {dossier.prenom_mere}",
+            "nationalite_mere": dossier.nationalite_mere,
+            "nom_complet_pere": f"{dossier.nom_pere} {dossier.prenom_pere}",
+            "nationalite_pere": dossier.nationalite_pere,
+            "nom_complet_declarant": f"{dossier.nom_declarant} {dossier.prenom_declarant}",
+            "lien_parente_declarant": dossier.lien_parente_declarant,
+            "dossier_naissance_id": dossier.id,
+            "genere_par_utilisateur_id": session['utilisateur_id'],
+            "genere_le": datetime.now(),
+            "est_actif": True
+        }
+
+        if acte_existant:
+            for key, value in infos_acte.items():
+                setattr(acte_existant, key, value)
+            acte = acte_existant
+            action = "mis à jour"
+            print(f"✅ Acte existant mis à jour - ID: {acte.id}")
+        else:
+            acte = ActeNaissance(**infos_acte, mairie_id=dossier.mairie_id)
+            db.session.add(acte)
+            action = "créé"
+            print(f"✅ Nouvel acte créé - Numéro: {numero_acte}")
+
+        db.session.commit()
+        print(f"✅ Acte {action} avec succès - ID: {acte.id}")
+
+        # Envoi d'email aux parents
+        def is_valid_email(email):
+            return email and re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
+        destinataires = []
+        if is_valid_email(dossier.email_mere):
+            destinataires.append(dossier.email_mere)
+        if is_valid_email(dossier.email_pere):
+            destinataires.append(dossier.email_pere)
+
+        if destinataires:
+            try:
+                msg = Message(
+                subject="📄 Acte de naissance disponible",
+                sender=Config.MAIL_DEFAULT_SENDER,
+                recipients=destinataires,
+                html=f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h2 style="color: #28a745; margin: 0; font-size: 24px;">
+                                ✅ Acte de naissance prêt !
+                            </h2>
+                            <p style="color: #555;">📍 Mairie de {dossier.mairie.nom}</p>
+                        </div>
+
+                        <div style="background-color: #e2f7e1; border: 1px solid #c3e6cb; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                            <h3 style="color: #155724; margin: 0 0 15px 0; font-size: 18px;">
+                                👶 Informations de l’enfant
+                            </h3>
+                            <p style="margin: 8px 0; color: #333;"><strong>Nom :</strong> {dossier.nom_enfant.upper()} {dossier.prenom_enfant.title()}</p>
+                            <p style="margin: 8px 0; color: #333;"><strong>Date de naissance :</strong> {dossier.date_naissance.strftime('%d/%m/%Y')}</p>
+                        </div>
+
+                        <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                            <h3 style="color: #0c5460; margin: 0 0 15px 0; font-size: 18px;">
+                                📬 Instructions de retrait
+                            </h3>
+                            <p style="margin: 8px 0; color: #0c5460;">• Présentez-vous à la mairie munis de vos pièces d’identité</p>
+                            <p style="margin: 8px 0; color: #0c5460;">• Demandez à retirer l’acte de naissance de votre enfant</p>
+                            <p style="margin: 8px 0; color: #0c5460;">• Disponible à partir du <strong>{date_etablissement.strftime('%d/%m/%Y')}</strong></p>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+                            <p style="color: #6c757d; font-size: 14px; margin: 0;">
+                                Service d'État civil - Mairie
+                            </p>
+                            <p style="color: #6c757d; font-size: 12px; margin: 5px 0 0 0;">
+                                Cet email est généré automatiquement. Merci de ne pas y répondre.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                """
+            )
+                mail.send(msg)
+                print(f"✅ Email envoyé avec succès à {', '.join(destinataires)}")
+            except Exception as email_error:
+                print(f"⚠️ Erreur lors de l'envoi de l'email : {str(email_error)}")
+
+        # Génération PDF
+        try:
+            html = render_template('mairie/documents/acte_naissance.html', dossier=dossier, acte=acte)
+            filename = f"acte_{acte.id}_{int(datetime.now().timestamp())}.pdf"
+            pdf_path = os.path.join('static', 'pdfs', filename)
+            os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+
+            pdfkit.from_string(html, pdf_path, options={
+                'encoding': 'UTF-8',
+                'quiet': '',
+                'page-size': 'A4',
+                'margin-top': '10mm',
+                'margin-right': '10mm',
+                'margin-bottom': '10mm',
+                'margin-left': '10mm',
+                'enable-local-file-access': ''
+            })
+
+            acte.chemin_pdf = pdf_path
+            db.session.commit()
+            print(f"✅ PDF généré avec succès : {pdf_path}")
+
+        except Exception as pdf_error:
+            print(f"⚠️ Erreur génération PDF : {str(pdf_error)}")
+            flash("⚠️ Acte généré mais erreur PDF", "warning")
+
+        flash(f"✅ Acte {action} avec succès. Cliquez ici pour le télécharger.", "success")
+        return redirect(url_for('mairie.dashboard'))
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Erreur générale : {str(e)}")
+        flash(f"❌ Une erreur est survenue : {str(e)}", "danger")
+        return redirect(url_for('mairie.dashboard'))

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Acte de Naissance - Birth Certificate</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0.8cm;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 9pt;
+            line-height: 1.3;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+
+        .certificate-container {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #1a3e72;
+            padding: 15px;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .watermark {
+            position: absolute;
+            content: "OFFICIEL";
+            opacity: 0.6;
+            font-size: 90pt;
+            color: #1a3e72;
+            transform: rotate(-45deg);
+            left: 5%;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .certificate-number {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 9pt;
+            color: #666;
+            z-index: 1; /* ✅ Devant le filigrane */
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px solid #1a3e72;
+            padding-bottom: 5px;
+        }
+
+        .header h1 {
+            font-size: 14pt;
+            margin: 0;
+            text-transform: uppercase;
+            color: #1a3e72;
+        }
+
+        .header h2 {
+            font-size: 10pt;
+            margin: 2px 0;
+            color: #1a3e72;
+        }
+
+        .subtitle {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .document-title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #1a3e72;
+            text-transform: uppercase;
+        }
+
+        .document-subtitle {
+            text-align: center;
+            font-size: 10pt;
+            margin-bottom: 15px;
+            color: #1a3e72;
+        }
+
+        .section {
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 9pt;
+            color: #1a3e72;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 5px;
+        }
+
+        .field {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 5px;
+            margin-bottom: 3px;
+        }
+
+        .field-label {
+            font-weight: bold;
+        }
+
+        .field-value {
+            border-bottom: 1px dotted #999;
+            padding-bottom: 1px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .signature-area {
+            text-align: right;
+            font-size: 9pt;
+            margin-top: 20px;
+        }
+
+        .signature-line {
+            width: 200px;
+            border-top: 1px solid #000;
+            margin-top: 30px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 7pt;
+            color: #777;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <div class="watermark">OFFICIEL</div>
+        <div class="certificate-number"><strong>N°: {{ acte.numero_acte }}</strong></div>
+
+        <!-- EN-TÊTE -->
+        <div class="header">
+            <h1>RÉPUBLIQUE DU CAMEROUN</h1>
+            <h2>REPUBLIC OF CAMEROON</h2>
+            <h1>MAIRIE DE {{ dossier.mairie.nom|upper }}</h1>
+            <h2>{{ dossier.mairie.nom|upper }} CITY COUNCIL</h2>
+            <div class="subtitle">Service de l'État Civil / Civil Status Registration Office</div>
+        </div>
+
+        <!-- TITRE -->
+        <div class="document-title">ACTE DE NAISSANCE</div>
+        <div class="document-subtitle">BIRTH CERTIFICATE</div>
+
+        <!-- ENFANT / CHILD -->
+        <div class="section">
+            <div class="section-title">ENFANT / CHILD</div>
+            <div class="field"><div class="field-label">Nom et prénoms / Name:</div><div class="field-value">{{ dossier.nom_enfant|upper }} {{ dossier.prenom_enfant|title }}</div></div>
+            <div class="field"><div class="field-label">Sexe / Gender:</div><div class="field-value">{{ 'Masculin / Male' if dossier.sexe_enfant == 'Masculin' else 'Féminin / Female' }}</div></div>
+            <div class="field"><div class="field-label">Date de naissance / Date of birth:</div><div class="field-value">{{ dossier.date_naissance.strftime('%d/%m/%Y') }}</div></div>
+            <div class="field"><div class="field-label">Heure de naissance / Time of birth:</div><div class="field-value">{{ dossier.heure_naissance.strftime('%H:%M') }}</div></div>
+            <div class="field"><div class="field-label">Lieu de naissance / Place of birth:</div><div class="field-value">{{ dossier.lieu_naissance }}</div></div>
+        </div>
+
+        <!-- PÈRE / FATHER -->
+        <div class="section">
+            <div class="section-title">PÈRE / FATHER</div>
+            <div class="field"><div class="field-label">Nom et prénoms / Name:</div>
+                <div class="field-value">
+                    {% if dossier.nom_pere %}
+                    {{ dossier.nom_pere|upper }} {{ dossier.prenom_pere|title }}
+                    {% else %}
+                    Non déclaré / Not declared
+                    {% endif %}
+                </div>
+            </div>
+            {% if dossier.nom_pere %}
+            <div class="field"><div class="field-label">Date de naissance / Date of birth:</div><div class="field-value">{{ dossier.date_naissance_pere.strftime('%d/%m/%Y') if dossier.date_naissance_pere else 'Non renseignée / Not provided' }}</div></div>
+            <div class="field"><div class="field-label">Lieu de naissance / Place of birth:</div><div class="field-value">{{ dossier.lieu_naissance_pere or 'Non renseigné / Not provided' }}</div></div>
+            <div class="field"><div class="field-label">Profession / Occupation:</div><div class="field-value">{{ dossier.profession_pere or 'Non renseignée / Not provided' }}</div></div>
+            <div class="field"><div class="field-label">Nationalité / Nationality:</div><div class="field-value">{{ dossier.nationalite_pere or 'Non renseignée / Not provided' }}</div></div>
+            {% endif %}
+        </div>
+
+        <!-- MÈRE / MOTHER -->
+        <div class="section">
+            <div class="section-title">MÈRE / MOTHER</div>
+            <div class="field"><div class="field-label">Nom et prénoms / Name:</div><div class="field-value">{{ dossier.nom_mere|upper }} {{ dossier.prenom_mere|title }}</div></div>
+            <div class="field"><div class="field-label">Date de naissance / Date of birth:</div><div class="field-value">{{ dossier.date_naissance_mere.strftime('%d/%m/%Y') if dossier.date_naissance_mere else 'Non renseignée / Not provided' }}</div></div>
+            <div class="field"><div class="field-label">Lieu de naissance / Place of birth:</div><div class="field-value">{{ dossier.lieu_naissance_mere or 'Non renseigné / Not provided' }}</div></div>
+            <div class="field"><div class="field-label">Profession / Occupation:</div><div class="field-value">{{ dossier.profession_mere or 'Non renseignée / Not provided' }}</div></div>
+            <div class="field"><div class="field-label">Nationalité / Nationality:</div><div class="field-value">{{ dossier.nationalite_mere or 'Non renseignée / Not provided' }}</div></div>
+        </div>
+
+        <!-- DÉCLARANT / DECLARANT -->
+        {% if dossier.nom_declarant %}
+        <div class="section">
+            <div class="section-title">DÉCLARANT / DECLARANT</div>
+            <div class="field"><div class="field-label">Nom et prénoms / Name:</div><div class="field-value">{{ dossier.nom_declarant|upper }} {{ dossier.prenom_declarant|title }}</div></div>
+            <div class="field"><div class="field-label">Lien de parenté / Relationship:</div><div class="field-value">{{ dossier.lien_parente_declarant }}</div></div>
+        </div>
+        {% endif %}
+
+        <!-- INFORMATIONS ADMINISTRATIVES -->
+        <div class="section">
+            <div class="section-title">INFORMATIONS ADMINISTRATIVES / ADMINISTRATIVE INFORMATION</div>
+            <div class="field"><div class="field-label">Numéro d'acte / Certificate number:</div><div class="field-value">{{ acte.numero_acte }}</div></div>
+            <div class="field"><div class="field-label">Date d'enregistrement / Registration date:</div><div class="field-value">{{ acte.date_enregistrement.strftime('%d/%m/%Y') }}</div></div>
+            <div class="field"><div class="field-label">Lieu d'enregistrement / Registration place:</div><div class="field-value">{{ acte.lieu_enregistrement }}</div></div>
+        </div>
+
+        <!-- SIGNATURE -->
+        <div class="signature-area">
+            <div>Fait à {{ dossier.mairie.nom }}, le {{ acte.date_enregistrement.strftime('%d/%m/%Y') }}</div>
+            <div>Done at {{ dossier.mairie.nom }}, on {{ acte.date_enregistrement.strftime('%d/%m/%Y') }}</div>
+            <div class="signature-line"></div>
+            <div>Le Maire / The Mayor</div>
+        </div>
+
+        <!-- PIED DE PAGE -->
+        <div class="footer">
+            Document officiel - Ne pas jeter / Official document - Do not discard<br>
+            Numéro d'enregistrement : {{ acte.numero_acte }} / Registration number: {{ acte.numero_acte }}
+        </div>
+    </div>
+</body>
+</html>

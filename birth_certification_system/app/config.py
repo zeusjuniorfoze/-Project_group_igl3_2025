@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import time
 
+
 # Charger les variables d'environnement depuis .env
 load_dotenv()
 
@@ -46,3 +47,7 @@ class Config:
 
     if not MAIL_USERNAME or not MAIL_PASSWORD:
         print("⚠️ Attention : Les variables MAIL_USERNAME et MAIL_PASSWORD ne sont pas définies.")
+        
+    PDFKIT_CONFIG = {
+    'wkhtmltopdf': 'C:\Program Files\wkhtmltopdf\bin'  # Chemin selon votre OS
+}
