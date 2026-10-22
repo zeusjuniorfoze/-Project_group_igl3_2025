@@ -1,120 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connexion & Inscription</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0d6848">
+    <title>Connexion | Actes de naissance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}">
 </head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <a class="auth-brand" href="{{ url_for('main.index') }}">
+            <span class="auth-brand-mark"><i class="bx bxs-baby-carriage"></i></span>
+            <span>État civil <strong>Numérique</strong></span>
+        </a>
 
-<body>
-    <!-- Home -->
-    <section class="home show">
-        <a href="#" class="nav_logo"><i class='bx bxs-baby-carriage'></i> Gestion Numerique Des Actes De Naissances </a>
-        <div class="form_container">
-            <i class="bx bx-x form_close"></i>
+        <section class="auth-card" aria-labelledby="auth-title">
+            <a class="auth-close" href="{{ url_for('main.index') }}" aria-label="Retour à l’accueil" title="Retour à l’accueil">
+                <i class="bx bx-x" aria-hidden="true"></i>
+            </a>
+            <div class="auth-icon"><i class="bx bx-user"></i></div>
+            <p class="auth-eyebrow">Espace sécurisé</p>
+            <h1 id="auth-title">Connexion</h1>
+            <p class="auth-description">Connectez-vous à votre espace de gestion de l’état civil.</p>
 
-            <!-- Login Form -->
-            <div class="form login_form">
-                <form action="{{ url_for('auth.login_post') }}" method="POST">
-                    <h2><i class='bx bx-log-in'></i> Login</h2>
-                    <div class="input_box">
-                        <input type="email" name="email" id="login-email" placeholder="Enter your email" required />
-                        <i class="bx bx-envelope email"></i>
-                        <div id="email-message" class="validity-message"></div>
-                    </div>
+            {% include "auth/_messages.html" %}
 
-                    <div class="input_box">
-                        <input type="password" name="mot_de_passe" id="login-password" placeholder="Enter your password"
-                            required />
-                        <i class="bx bx-lock password"></i>
-                        <i class="bx bx-low-vision pw_hide"></i>
-                        <div id="password-message" class="validity-message"></div>
-                    </div>
+            <form action="{{ url_for('auth.login_post') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="auth-label" for="email">Adresse e-mail</label>
+                <div class="auth-input-wrap">
+                    <i class="bx bx-envelope" aria-hidden="true"></i>
+                    <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        placeholder="exemple@domaine.com"
+                        autocomplete="username"
+                        required
+                        autofocus
+                    >
+                </div>
 
-                    <div class="option_field">
-                        <span class="checkbox">
-                            <input type="checkbox" id="check" />
-                            <label for="check">Remember me</label>
-                        </span>
-                        <a href="{{ url_for('auth.forget_password') }}" class="forgot_pw">Forgot password?</a>
-                    </div>
+                <label class="auth-label" for="mot_de_passe">Mot de passe</label>
+                <div class="auth-input-wrap">
+                    <i class="bx bx-lock-alt" aria-hidden="true"></i>
+                    <input
+                        type="password"
+                        name="mot_de_passe"
+                        id="mot_de_passe"
+                        placeholder="Votre mot de passe"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button class="auth-password-toggle" type="button" aria-label="Afficher le mot de passe" aria-pressed="false">
+                        <i class="bx bx-show" aria-hidden="true"></i>
+                    </button>
+                </div>
 
-                    <button type="submit" class="button">Login Now</button>
-                    <a href="#" id="signup"></a>
+                <div class="auth-options">
+                    <a href="{{ url_for('auth.forget_password') }}">Mot de passe oublié ?</a>
+                </div>
+                <button class="auth-button" type="submit">
+                    Se connecter <i class="bx bx-right-arrow-alt"></i>
+                </button>
+            </form>
+        </section>
 
-                </form>
-            </div>
-
-            <!-- Signup Form -->
-            <div class="form signup_form">
-                <form action="#" method="POST">
-                    <h2>Signup</h2>
-
-                    <div class="input_box">
-                        <input type="text" name="prenom" placeholder="Enter your first name" required />
-                        <i class="bx bx-user password"></i>
-                    </div>
-
-                    <div class="input_box">
-                        <input type="email" name="email" id="signup-email" placeholder="Enter your email" required />
-                        <i class="bx bx-envelope email"></i>
-                        <div id="signup-email-message" class="validity-message"></div>
-                    </div>
-
-                    <div class="input_box">
-                        <input type="password" name="mot_de_passe" id="signup-password" placeholder="Create password"
-                            required />
-                        <i class="bx bx-lock password"></i>
-                        <i class="bx bx-low-vision pw_hide"></i>
-                        <div id="signup-password-message" class="validity-message"></div>
-                    </div>
-
-                    <div class="input_box">
-                        <input type="password" name="confirm_mot_de_passe" id="confirm-password"
-                            placeholder="Confirm password" required />
-                        <i class="bx bx-lock password"></i>
-                        <i class="bx bx-low-vision pw_hide"></i>
-                        <div id="confirm-password-message" class="validity-message"></div>
-                    </div>
-
-                    <button type="submit" class="button">Signup Now</button>
-
-                    <div class="login_signup">Already have an account? <a href="#" id="login">Login</a></div>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <script src="../../static/js/login.js"></script>
-    <!-- Gestion des messages flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
+        <p class="auth-copyright">République du Cameroun · Paix – Travail – Patrie</p>
+    </main>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const alert = document.createElement('div');
-            alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
-            alert.style.zIndex = '9999';
-            alert.innerHTML = `
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            document.body.appendChild(alert);
-
-            // Fermer automatiquement après 5 secondes
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
+        document.querySelectorAll(".auth-password-toggle").forEach((button) => {
+            button.addEventListener("click", () => {
+                const input = button.parentElement.querySelector("input");
+                const visible = input.type === "password";
+                input.type = visible ? "text" : "password";
+                button.setAttribute("aria-pressed", String(visible));
+                button.setAttribute(
+                    "aria-label",
+                    visible ? "Masquer le mot de passe" : "Afficher le mot de passe"
+                );
+                button.querySelector("i").className = visible ? "bx bx-hide" : "bx bx-show";
+            });
         });
     </script>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
 </body>
-
 </html>

@@ -1,0 +1,53 @@
+{# Modal Mention marginale — inclus dans la boucle des dossiers (variable : dossier) #}
+{% if dossier.acte_naissance %}
+<div class="modal fade" id="modalMention{{ dossier.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('mairie.ajouter_mention', id=dossier.acte_naissance.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title"><i class='bx bx-edit-alt'></i> Mention marginale</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Type <span class="text-danger">*</span></label>
+                        <input type="text" name="type_mention" class="form-control" required
+                            placeholder="Reconnaissance, Mariage, Rectification...">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">N° de la mention</label>
+                            <input type="text" name="numero" class="form-control" placeholder="818/CE7201/2025">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="date_mention" class="form-control"
+                                value="{{ current_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Texte <span class="text-danger">*</span></label>
+                        <textarea name="texte" class="form-control" rows="3" maxlength="500" required
+                            placeholder="Enfant reconnu par son père naturel. Transcrit au volant de l'acte de naissance N° ..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Base légale</label>
+                        <input type="text" name="base_legale" class="form-control"
+                            placeholder="Conformément à l'article 44 de l'ordonnance N°81-02 du 29/06/1981.">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Officier d'état civil</label>
+                        <input type="text" name="officier_nom" class="form-control"
+                            value="{{ dossier.acte_naissance.officier_nom or '' }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-secondary">Ajouter et régénérer le PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}

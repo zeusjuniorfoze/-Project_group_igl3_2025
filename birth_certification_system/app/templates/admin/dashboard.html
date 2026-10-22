@@ -6,21 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord - État Civil</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="../../static/css/bootstrap.min.css">
-    <link href="../../static/boxicons/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../static/css/admin.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 
-    <!-- Chart.js local -->
-    <script src="../../static/js/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 </head>
 
 <body>
+    {# Valeurs par défaut : la page ne plante pas si une variable manque #}
+    {% set stats = stats|default({}) %}
+    {% set systeme = systeme|default({}) %}
+    {% set alertes = alertes|default([]) %}
+    {% set actes = actes|default([]) %}
+    {% set logs = logs|default([]) %}
+    {% set recent_logs = recent_logs|default([]) %}
+    {% set types_journal = types_journal|default([]) %}
+    {% set ids_moi = session.get('utilisateur_id') %}
+
     <div class="admin-container">
-        <!-- Sidebar -->
+
+        <!-- ===================== BARRE LATÉRALE ===================== -->
         <div class="sidebar">
             <div class="logo text-center py-3">
-                <img src="../../static/images/télécharger.jpg" alt="Logo" class="img-fluid" style="max-height: 60px;">
+                <img src="{{ url_for('static', filename='images/télécharger.jpg') }}" alt="Logo" class="img-fluid"
+                    style="max-height: 60px;">
                 <h5 class="text-white mt-2">État Civil</h5>
             </div>
 
@@ -32,26 +42,55 @@
                 <li><a href="#page4"><i class="bx bx-file"></i> <span>Actes</span></a></li>
                 <li><a href="#page5"><i class="bx bx-history"></i> <span>Historique</span></a></li>
                 <li><a href="#page6"><i class="bx bx-cog"></i> <span>Paramètres</span></a></li>
+                <li><a href="#page7"><i class="bx bx-help-circle"></i> <span>Aide</span></a></li>
             </ul>
 
             <div class="logout-btn p-3">
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger w-100">
-                    <i class='bx bx-log-out'></i> Déconnexion
-                </a>
+                <form method="POST" action="{{ url_for('auth.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class='bx bx-log-out'></i> Déconnexion
+                    </button>
+                </form>
             </div>
         </div>
 
-        <!-- Main Content -->
+        <!-- ===================== CONTENU ===================== -->
         <div class="content">
-            <!-- Dashboard Section -->
+
+            <!-- ============ ACCUEIL ============ -->
             <section id="home" class="page active">
                 <div class="container-fluid">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h2 class="fw-bold"><i class='bx bx-home'></i> Tableau de Bord</h2>
-                        <div class="text-muted">Dernière mise à jour: {{ now.strftime('%d/%m/%Y %H:%M') }}</div>
+                        <div class="text-muted">
+                            {% if now %}Dernière mise à jour : {{ now.strftime('%d/%m/%Y %H:%M') }}{% endif %}
+                        </div>
                     </div>
 
-                    <!-- Stats Cards -->
+                    <!-- Points d'attention -->
+                    {% if alertes %}
+                    <div class="card mb-4 border-warning">
+                        <div class="card-header bg-warning-subtle">
+                            <h5 class="mb-0"><i class='bx bx-error'></i> Points d'attention ({{ alertes|length }})</h5>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for a in alertes[:8] %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <span class="badge bg-{{ a.niveau }} me-2">&nbsp;</span>{{ a.texte }}
+                                </span>
+                                {% if a.lien %}<a href="{{ a.lien }}" class="btn btn-sm btn-outline-secondary">Corriger</a>{% endif %}
+                            </li>
+                            {% endfor %}
+                            {% if alertes|length > 8 %}
+                            <li class="list-group-item text-muted small">… et {{ alertes|length - 8 }} autre(s).</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Cartes principales -->
                     <div class="row g-4 mb-4">
                         <div class="col-xl-3 col-md-6">
                             <div class="card card-stats">
@@ -65,10 +104,7 @@
                                             <i class="bx bx-plus-medical"></i>
                                         </div>
                                     </div>
-                                    <p class="mt-3 mb-0 text-sm">
-                                        <a href="#page1" class="text-nowrap">Voir tous <i
-                                                class="bx bx-chevron-right"></i></a>
-                                    </p>
+                                    <p class="mt-3 mb-0 text-sm"><a href="#page1" class="text-nowrap">Voir tous <i class="bx bx-chevron-right"></i></a></p>
                                 </div>
                             </div>
                         </div>
@@ -85,10 +121,7 @@
                                             <i class="bx bx-building-house"></i>
                                         </div>
                                     </div>
-                                    <p class="mt-3 mb-0 text-sm">
-                                        <a href="#page3" class="text-nowrap">Voir tous <i
-                                                class="bx bx-chevron-right"></i></a>
-                                    </p>
+                                    <p class="mt-3 mb-0 text-sm"><a href="#page3" class="text-nowrap">Voir toutes <i class="bx bx-chevron-right"></i></a></p>
                                 </div>
                             </div>
                         </div>
@@ -105,10 +138,7 @@
                                             <i class="bx bx-user"></i>
                                         </div>
                                     </div>
-                                    <p class="mt-3 mb-0 text-sm">
-                                        <a href="#page2" class="text-nowrap">Voir tous <i
-                                                class="bx bx-chevron-right"></i></a>
-                                    </p>
+                                    <p class="mt-3 mb-0 text-sm"><a href="#page2" class="text-nowrap">Voir tous <i class="bx bx-chevron-right"></i></a></p>
                                 </div>
                             </div>
                         </div>
@@ -119,53 +149,85 @@
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h6 class="text-muted mb-1">Actes de naissance</h6>
-                                            <h3 class="mb-0">{{ actes_count }}</h3>
+                                            <h3 class="mb-0">{{ actes_count|default(actes|length) }}</h3>
                                         </div>
                                         <div class="icon icon-shape bg-gradient-warning text-white rounded-circle">
                                             <i class="bx bx-file"></i>
                                         </div>
                                     </div>
-                                    <p class="mt-3 mb-0 text-sm">
-                                        <a href="#page4" class="text-nowrap">Voir tous <i
-                                                class="bx bx-chevron-right"></i></a>
-                                    </p>
+                                    <p class="mt-3 mb-0 text-sm"><a href="#page4" class="text-nowrap">Voir tous <i class="bx bx-chevron-right"></i></a></p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Charts Row -->
+                    <!-- Dossiers par statut -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-lg-3">
+                            <div class="card border-warning h-100"><div class="card-body py-3">
+                                <div class="text-muted small">En attente</div>
+                                <div class="fs-3 fw-bold text-warning">{{ stats.get('en_attente', 0) }}</div>
+                            </div></div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="card border-success h-100"><div class="card-body py-3">
+                                <div class="text-muted small">Validés</div>
+                                <div class="fs-3 fw-bold text-success">{{ stats.get('valide', 0) }}</div>
+                            </div></div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="card border-danger h-100"><div class="card-body py-3">
+                                <div class="text-muted small">Rejetés</div>
+                                <div class="fs-3 fw-bold text-danger">{{ stats.get('rejete', 0) }}</div>
+                            </div></div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="card border-primary h-100"><div class="card-body py-3">
+                                <div class="text-muted small">Actes délivrés</div>
+                                <div class="fs-3 fw-bold text-primary">{{ stats.get('acte_delivre', 0) }}</div>
+                            </div></div>
+                        </div>
+                    </div>
+
+                    <!-- Graphiques -->
                     <div class="row g-4 mb-4">
-                        <!-- Actes par mois -->
                         <div class="col-lg-8">
                             <div class="card h-100">
                                 <div class="card-header">
                                     <h5 class="mb-0"><i class='bx bx-line-chart'></i> Actes de naissance par mois</h5>
                                 </div>
                                 <div class="card-body">
-                                    <canvas id="actesChart" height="300"></canvas>
+                                    <canvas id="actesChart" data-chart height="300"></canvas>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Répartition des rôles -->
                         <div class="col-lg-4">
                             <div class="card h-100">
                                 <div class="card-header">
-                                    <h5 class="mb-0"><i class='bx bx-pie-chart-alt'></i> Répartition des utilisateurs
-                                    </h5>
+                                    <h5 class="mb-0"><i class='bx bx-pie-chart-alt'></i> Dossiers par statut</h5>
                                 </div>
                                 <div class="card-body">
-                                    <canvas id="rolesChart" height="300"></canvas>
+                                    <canvas id="statutsChart" data-chart height="300"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Dernières activités -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class='bx bx-group'></i> Répartition des utilisateurs</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="rolesChart" data-chart height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dernières activités -->
+                        <div class="col-lg-8">
+                            <div class="card h-100">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0"><i class='bx bx-time-five'></i> Dernières activités</h5>
                                     <a href="#page5" class="btn btn-sm btn-outline-primary">Voir tout</a>
@@ -174,22 +236,18 @@
                                     <div class="table-responsive">
                                         <table class="table table-hover mb-0">
                                             <thead class="bg-light">
-                                                <tr>
-                                                    <th>Date</th>
-                                                    <th>Utilisateur</th>
-                                                    <th>Action</th>
-                                                    <th>Type</th>
-                                                </tr>
+                                                <tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Type</th></tr>
                                             </thead>
                                             <tbody>
                                                 {% for log in recent_logs %}
                                                 <tr>
-                                                    <td>{{ log.horodatage.strftime('%d/%m/%Y %H:%M') }}</td>
-                                                    <td>{{ log.utilisateur.nom_utilisateur if log.utilisateur else
-                                                        'Système' }}</td>
+                                                    <td class="text-nowrap">{{ log.horodatage.strftime('%d/%m/%Y %H:%M') }}</td>
+                                                    <td>{{ log.utilisateur.nom_utilisateur if log.utilisateur else 'Système' }}</td>
                                                     <td>{{ log.action }}</td>
                                                     <td>{{ log.type_enregistrement or '-' }}</td>
                                                 </tr>
+                                                {% else %}
+                                                <tr><td colspan="4" class="text-center text-muted py-3">Aucune activité enregistrée.</td></tr>
                                                 {% endfor %}
                                             </tbody>
                                         </table>
@@ -201,25 +259,26 @@
                 </div>
             </section>
 
-            <!-- SECTION HÔPITAUX -->
+            <!-- ============ HÔPITAUX ============ -->
             <section id="page1" class="page container py-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                     <h2><i class='bx bx-clinic'></i> Gestion des Hôpitaux</h2>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutHopital">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutHopital">
                         <i class='bx bx-plus-medical'></i> Ajouter
                     </button>
                 </div>
 
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="🔍 Rechercher un hôpital..."
+                        data-filter-target="#tableHopitaux" data-filter-key="q">
+                </div>
+
                 <div class="table-responsive shadow-sm rounded">
-                    <table class="table table-striped table-hover align-middle">
+                    <table id="tableHopitaux" class="table table-striped table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
-                                <th>#</th>
-                                <th>Nom</th>
-                                <th>Localisation</th>
-                                <th>Région</th>
-                                <th>Contact</th>
-                                <th>Actions</th>
+                                <th>#</th><th>Nom</th><th>Localisation</th><th>Région</th>
+                                <th>Contact</th><th class="text-center">Agents</th><th class="text-center">Dossiers</th><th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -230,120 +289,108 @@
                                 <td>{{ hopital.localisation }}</td>
                                 <td>{{ hopital.region }}</td>
                                 <td>{{ hopital.email_contact or 'N/A' }}</td>
-                                <td>
-                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modalViewHopital{{ hopital.id }}">
-                                        <i class='bx bx-show'></i>
-                                    </button>
-                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modalEditHopital{{ hopital.id }}">
-                                        <i class='bx bx-edit'></i>
-                                    </button>
-                                    <form method="POST"
-                                        action="{{ url_for('admin.supprimer_hopital', hopital_id=hopital.id) }}"
-                                        class="d-inline">
+                                <td class="text-center">{{ hopital.utilisateurs|length }}</td>
+                                <td class="text-center">{{ hopital.dossiers_naissance|length }}</td>
+                                <td class="text-nowrap">
+                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#modalViewHopital{{ hopital.id }}" title="Voir"><i class='bx bx-show'></i></button>
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#modalEditHopital{{ hopital.id }}" title="Modifier"><i class='bx bx-edit'></i></button>
+                                    <form method="POST" action="{{ url_for('admin.supprimer_hopital', hopital_id=hopital.id) }}"
+                                        class="d-inline" data-confirm="Supprimer l'hôpital « {{ hopital.nom }} » ?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Confirmer la suppression ?')">
+                                            {% if hopital.dossiers_naissance %}disabled title="Suppression impossible : {{ hopital.dossiers_naissance|length }} dossier(s) lié(s)"{% else %}title="Supprimer"{% endif %}>
                                             <i class='bx bx-trash'></i>
                                         </button>
                                     </form>
                                 </td>
                             </tr>
-
-                            <!-- Modals pour chaque hôpital -->
-                            {% include 'admin/modals/hopitaux.html' %}
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <div class="alert alert-warning text-center mt-3" data-empty-for="#tableHopitaux" hidden>Aucun hôpital ne correspond à la recherche.</div>
+                {% if not hopitaux %}<div class="alert alert-info mt-3">Aucun hôpital enregistré pour le moment.</div>{% endif %}
 
-                <!-- Modal Ajout Hôpital -->
-                <div class="modal fade" id="modalAjoutHopital" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content shadow-lg">
-                            <form method="POST" action="{{ url_for('admin.ajouter_hopital') }}">
-                                <div class="modal-header bg-success text-white">
-                                    <h5 class="modal-title">Ajouter un hôpital</h5>
-                                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <input type="text" class="form-control" name="nom" placeholder="Nom" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <input type="text" class="form-control" name="localisation"
-                                            placeholder="Localisation" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <input type="text" class="form-control" name="region" placeholder="Région"
-                                            required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <input type="email" class="form-control" name="email_contact"
-                                            placeholder="Email">
-                                    </div>
-                                    <div class="mb-3">
-                                        <input type="text" class="form-control" name="numero_telephone"
-                                            placeholder="Téléphone">
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button class="btn btn-success" type="submit">
-                                        <i class='bx bx-save'></i> Enregistrer
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                {% include 'admin/modals/hopitaux.html' %}
             </section>
 
-            <!-- SECTION UTILISATEURS -->
+            <!-- ============ UTILISATEURS ============ -->
             <section id="page2" class="page container py-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                     <h2><i class='bx bx-group'></i> Gestion des Utilisateurs</h2>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutUtilisateur">
-                        <i class='bx bx-plus-medical'></i> Ajouter
-                    </button>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('admin.export_utilisateurs_csv') }}" class="btn btn-outline-secondary">
+                            <i class='bx bx-download'></i> Export CSV
+                        </a>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutUtilisateur">
+                            <i class='bx bx-plus-medical'></i> Ajouter
+                        </button>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <input type="text" id="searchInput" class="form-control"
-                        placeholder="🔍 Rechercher un utilisateur...">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-8">
+                        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher un utilisateur..."
+                            data-filter-target="#tableUtilisateurs" data-filter-key="q">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" data-filter-target="#tableUtilisateurs" data-filter-key="role">
+                            <option value="">Tous les rôles</option>
+                            <option value="ADMIN">Administrateur</option>
+                            <option value="AGENT_MAIRIE">Agent Mairie</option>
+                            <option value="AGENT_HOPITAL">Agent Hôpital</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="table-responsive shadow-sm rounded">
-                    <table class="table table-striped table-hover align-middle">
+                    <table id="tableUtilisateurs" class="table table-striped table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
                                 <th>#</th>
                                 <th><i class='bx bx-user'></i> Nom</th>
                                 <th><i class='bx bx-envelope'></i> Email</th>
                                 <th><i class='bx bx-id-card'></i> Rôle</th>
+                                <th>Structure</th>
                                 <th><i class='bx bx-cog'></i> Actions</th>
                             </tr>
                         </thead>
                         <tbody id="userTableBody">
                             {% for utilisateur in utilisateurs %}
-                            <tr>
+                            <tr data-role="{{ utilisateur.role.value }}">
                                 <td>{{ loop.index }}</td>
-                                <td>{{ utilisateur.nom_utilisateur }}</td>
-                                <td>{{ utilisateur.email }}</td>
-                                <td>{{ utilisateur.role.value.replace('_', ' ').capitalize() }}</td>
                                 <td>
-                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modalViewUtilisateur{{ utilisateur.id }}">
-                                        <i class='bx bx-show'></i>
-                                    </button>
-                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modalEditUtilisateur{{ utilisateur.id }}">
-                                        <i class='bx bx-edit'></i>
-                                    </button>
-                                    <form
-                                        action="{{ url_for('admin.supprimer_utilisateur', utilisateur_id=utilisateur.id) }}"
-                                        method="POST" class="d-inline">
+                                    {{ utilisateur.nom_utilisateur }}
+                                    {% if utilisateur.id == ids_moi %}<span class="badge bg-secondary">Vous</span>{% endif %}
+                                </td>
+                                <td>{{ utilisateur.email }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if utilisateur.role.value == 'ADMIN' %}bg-danger
+                                        {% elif utilisateur.role.value == 'AGENT_MAIRIE' %}bg-info text-dark
+                                        {% else %}bg-success{% endif %}">
+                                        {{ utilisateur.role.value.replace('_', ' ').capitalize() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if utilisateur.mairie %}🏛️ {{ utilisateur.mairie.nom }}
+                                    {% elif utilisateur.hopital %}🏥 {{ utilisateur.hopital.nom }}
+                                    {% else %}<span class="text-muted">—</span>{% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#modalViewUtilisateur{{ utilisateur.id }}" title="Voir"><i class='bx bx-show'></i></button>
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#modalEditUtilisateur{{ utilisateur.id }}" title="Modifier"><i class='bx bx-edit'></i></button>
+                                    <form action="{{ url_for('admin.supprimer_utilisateur', utilisateur_id=utilisateur.id) }}" method="POST"
+                                        class="d-inline" data-confirm="Supprimer l'utilisateur « {{ utilisateur.nom_utilisateur }} » ?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Confirmer la suppression ?')">
+                                            {% if utilisateur.id == ids_moi %}disabled title="Vous ne pouvez pas supprimer votre propre compte"
+                                            {% elif utilisateur.dossiers_soumis %}disabled title="Suppression impossible : cet utilisateur a soumis des dossiers"
+                                            {% else %}title="Supprimer"{% endif %}>
                                             <i class='bx bx-trash'></i>
                                         </button>
                                     </form>
@@ -353,117 +400,59 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Modal d'ajout d'un utilisateur -->
-                <div class="modal fade" id="modalAjoutUtilisateur" tabindex="-1" aria-labelledby="modalAjoutLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content shadow-lg">
-                            <div class="modal-header bg-success text-white">
-                                <h5 class="modal-title" id="modalAjoutLabel"><i class='bx bx-plus'></i> Ajouter un
-                                    utilisateur</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form action="{{ url_for('admin.ajouter_utilisateur') }}" method="POST">
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label>Nom complet</label>
-                                        <input type="text" name="nom_utilisateur" class="form-control"
-                                            placeholder="Entrez le nom..." required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Email</label>
-                                        <input type="email" name="email" class="form-control"
-                                            placeholder="Entrez l'email..." required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label>Rôle</label>
-                                        <select class="form-select" name="role" id="roleSelect" required>
-                                            <option value="">-- Sélectionner un rôle --</option>
-                                            <option value="ADMIN">Administrateur</option>
-                                            <option value="AGENT_MAIRIE">Agent Mairie</option>
-                                            <option value="AGENT_HOPITAL">Agent Hôpital</option>
-                                        </select>
-                                    </div>
+                <div class="alert alert-warning text-center mt-3" data-empty-for="#tableUtilisateurs" hidden>Aucun utilisateur ne correspond à la recherche.</div>
 
-                                    <div class="mb-3 d-none" id="mairieSelectContainer">
-                                        <label>Mairie associée</label>
-                                        <select class="form-select" name="mairie_id">
-                                            <option value="">-- Choisir une mairie --</option>
-                                            {% for mairie in mairies %}
-                                            <option value="{{ mairie.id }}">{{ mairie.nom }} ({{ mairie.localisation }})
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-3 d-none" id="hopitalSelectContainer">
-                                        <label>Hôpital associé</label>
-                                        <select class="form-select" name="hopital_id">
-                                            <option value="">-- Choisir un hôpital --</option>
-                                            {% for hopital in hopitaux %}
-                                            <option value="{{ hopital.id }}">{{ hopital.nom }} ({{ hopital.localisation
-                                                }})
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class='bx bx-save'></i> Enregistrer
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <!-- Modals Utilisateurs -->
                 {% include 'admin/modals/utilisateurs.html' %}
             </section>
 
-            <!-- SECTION MAIRIES -->
+            <!-- ============ MAIRIES ============ -->
             <section id="page3" class="page container py-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                     <h2><i class='bx bx-building'></i> Gestion des Mairies</h2>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutMairie">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAjoutMairie">
                         <i class='bx bx-plus-medical'></i> Ajouter
                     </button>
                 </div>
 
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="🔍 Rechercher une mairie..."
+                        data-filter-target="#tableMairies" data-filter-key="q">
+                </div>
+
                 <div class="table-responsive shadow-sm rounded">
-                    <table class="table table-striped table-hover align-middle">
+                    <table id="tableMairies" class="table table-striped table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
-                                <th>#</th>
-                                <th>Nom</th>
-                                <th>Localisation</th>
-                                <th>Région</th>
-                                <th>Contact</th>
-                                <th>Actions</th>
+                                <th>#</th><th>Nom</th><th>Localisation</th><th>Région</th>
+                                <th>En-tête des actes</th><th class="text-center">Agents</th><th class="text-center">Actes</th><th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for mairie in mairies %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td>{{ mairie.nom }}</td>
+                                <td>{{ mairie.nom }}<br><small class="text-muted">{{ mairie.email_contact or 'N/A' }}</small></td>
                                 <td>{{ mairie.localisation }}</td>
                                 <td>{{ mairie.region }}</td>
-                                <td>{{ mairie.email_contact or 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modalViewMairie{{ mairie.id }}">
-                                        <i class='bx bx-show'></i>
-                                    </button>
-                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modalEditMairie{{ mairie.id }}">
-                                        <i class='bx bx-edit'></i>
-                                    </button>
-                                    <form method="POST"
-                                        action="{{ url_for('admin.supprimer_mairie', mairie_id=mairie.id) }}"
-                                        class="d-inline">
+                                    {% if mairie.departement and mairie.arrondissement %}
+                                    <span class="badge bg-success">Complet</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">À compléter</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ mairie.utilisateurs|length }}</td>
+                                <td class="text-center">{{ mairie.actes_naissance|length }}</td>
+                                <td class="text-nowrap">
+                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#modalViewMairie{{ mairie.id }}" title="Voir"><i class='bx bx-show'></i></button>
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#modalEditMairie{{ mairie.id }}" title="Modifier"><i class='bx bx-edit'></i></button>
+                                    <form method="POST" action="{{ url_for('admin.supprimer_mairie', mairie_id=mairie.id) }}"
+                                        class="d-inline" data-confirm="Supprimer la mairie « {{ mairie.nom }} » ?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Confirmer la suppression ?')">
+                                            {% if mairie.actes_naissance %}disabled title="Suppression impossible : {{ mairie.actes_naissance|length }} acte(s) lié(s)"{% else %}title="Supprimer"{% endif %}>
                                             <i class='bx bx-trash'></i>
                                         </button>
                                     </form>
@@ -473,146 +462,231 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="alert alert-warning text-center mt-3" data-empty-for="#tableMairies" hidden>Aucune mairie ne correspond à la recherche.</div>
+                {% if not mairies %}<div class="alert alert-info mt-3">Aucune mairie enregistrée pour le moment.</div>{% endif %}
 
-                <!-- Modals Mairies -->
                 {% include 'admin/modals/mairies.html' %}
             </section>
 
-            <!-- SECTION ACTES DE NAISSANCE -->
+            <!-- ============ ACTES ============ -->
             <section id="page4" class="page container py-4">
-                <h2><i class='bx bx-file'></i> Gestion des Actes de Naissance</h2>
-                <!-- Contenu à implémenter -->
-                <div class="alert alert-info mt-4">
-                    <i class='bx bx-info-circle'></i> Module en cours de développement
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h2><i class='bx bx-file'></i> Actes de Naissance</h2>
+                    <a href="{{ url_for('admin.export_actes_csv') }}" class="btn btn-outline-secondary">
+                        <i class='bx bx-download'></i> Export CSV
+                    </a>
                 </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" placeholder="🔍 N° d'acte, nom de l'enfant..."
+                            data-filter-target="#tableActes" data-filter-key="q">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" data-filter-target="#tableActes" data-filter-key="mairie">
+                            <option value="">Toutes les mairies</option>
+                            {% for m in mairies %}<option value="{{ m.id }}">{{ m.nom }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" data-filter-target="#tableActes" data-filter-key="etat">
+                            <option value="">Tous les états</option>
+                            <option value="actif">Actifs</option>
+                            <option value="annule">Annulés</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive shadow-sm rounded">
+                    <table id="tableActes" class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>N° d'acte</th><th>Enfant</th><th>Né(e) le</th><th>Mairie</th>
+                                <th>Établi le</th><th class="text-center">Mentions</th><th>État</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in actes %}
+                            <tr data-mairie="{{ a.mairie_id }}" data-etat="{{ 'actif' if a.est_actif else 'annule' }}">
+                                <td><strong>{{ a.numero_acte }}</strong></td>
+                                <td>{{ a.nom_complet_enfant }}</td>
+                                <td>{{ a.date_naissance_enfant.strftime('%d/%m/%Y') if a.date_naissance_enfant else '—' }}</td>
+                                <td>{{ a.mairie.nom if a.mairie else '—' }}</td>
+                                <td>{% set d = a.dresse_le or a.date_enregistrement %}{{ d.strftime('%d/%m/%Y') if d else '—' }}</td>
+                                <td class="text-center">{{ a.mentions_marginales|length }}</td>
+                                <td>
+                                    {% if a.est_actif %}<span class="badge bg-success">Actif</span>
+                                    {% else %}<span class="badge bg-secondary">Annulé</span>{% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    {% if a.chemin_pdf %}
+                                    <a class="btn btn-outline-dark btn-sm" target="_blank" title="Ouvrir le PDF"
+                                        href="{{ url_for('admin.telecharger_acte_admin', acte_id=a.id, inline=1) }}"><i class='bx bx-show'></i></a>
+                                    <a class="btn btn-dark btn-sm" title="Télécharger"
+                                        href="{{ url_for('admin.telecharger_acte_admin', acte_id=a.id) }}"><i class='bx bx-download'></i></a>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">PDF absent</span>
+                                    {% endif %}
+                                    <form method="POST" action="{{ url_for('admin.basculer_acte_admin', acte_id=a.id) }}" class="d-inline"
+                                        data-confirm="{{ 'Annuler' if a.est_actif else 'Réactiver' }} l'acte {{ a.numero_acte }} ?">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm {{ 'btn-outline-danger' if a.est_actif else 'btn-outline-success' }}"
+                                            title="{{ 'Annuler l\'acte' if a.est_actif else 'Réactiver l\'acte' }}">
+                                            <i class='bx {{ "bx-block" if a.est_actif else "bx-revision" }}'></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-warning text-center mt-3" data-empty-for="#tableActes" hidden>Aucun acte ne correspond aux filtres.</div>
+                {% if not actes %}<div class="alert alert-info mt-3">Aucun acte n'a encore été généré.</div>{% endif %}
             </section>
 
-            <!-- SECTION HISTORIQUE -->
+            <!-- ============ HISTORIQUE ============ -->
             <section id="page5" class="page container py-4">
-                <h2><i class='bx bx-history'></i> Historique des Opérations</h2>
-                <!-- Contenu à implémenter -->
-                <div class="alert alert-info mt-4">
-                    <i class='bx bx-info-circle'></i> Module en cours de développement
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h2><i class='bx bx-history'></i> Historique des Opérations</h2>
+                    <a href="{{ url_for('admin.export_journal_csv') }}" class="btn btn-outline-secondary">
+                        <i class='bx bx-download'></i> Export CSV
+                    </a>
                 </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" placeholder="🔍 Utilisateur, action, adresse IP..."
+                            data-filter-target="#tableJournal" data-filter-key="q">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" data-filter-target="#tableJournal" data-filter-key="type">
+                            <option value="">Tous les types</option>
+                            {% for t in types_journal %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive shadow-sm rounded">
+                    <table id="tableJournal" class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Type</th><th>Réf.</th><th>Adresse IP</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr data-type="{{ log.type_enregistrement or '' }}">
+                                <td class="text-nowrap">{{ log.horodatage.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ log.utilisateur.nom_utilisateur if log.utilisateur else 'Système' }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.type_enregistrement or '—' }}</td>
+                                <td>{{ log.identifiant_enregistrement or '—' }}</td>
+                                <td>{{ log.adresse_ip or '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-warning text-center mt-3" data-empty-for="#tableJournal" hidden>Aucune entrée ne correspond aux filtres.</div>
+                {% if not logs %}<div class="alert alert-info mt-3">Le journal est vide.</div>
+                {% else %}<p class="text-muted small mt-2">Les 300 dernières opérations sont affichées. L'export CSV en contient jusqu'à 5 000.</p>{% endif %}
             </section>
 
-            <!-- SECTION PARAMÈTRES -->
+            <!-- ============ PARAMÈTRES ============ -->
             <section id="page6" class="page container py-4">
-                <h2><i class='bx bx-cog'></i> Paramètres du Système</h2>
-                <!-- Contenu à implémenter -->
-                <div class="alert alert-info mt-4">
-                    <i class='bx bx-info-circle'></i> Module en cours de développement
+                <h2 class="mb-4"><i class='bx bx-cog'></i> Paramètres du Système</h2>
+
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0"><i class='bx bx-check-shield'></i> Génération des actes PDF</h5></div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div>wkhtmltopdf<br><small class="text-muted">{{ systeme.get('wkhtmltopdf_chemin', '—') }}</small></div>
+                                    <span class="badge {{ 'bg-success' if systeme.get('wkhtmltopdf_ok') else 'bg-danger' }}">{{ 'OK' if systeme.get('wkhtmltopdf_ok') else 'Introuvable' }}</span>
+                                </li>
+                                {% for nom, present in systeme.get('images', {}).items() %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>static/img/{{ nom }}</span>
+                                    <span class="badge {{ 'bg-success' if present else ('bg-danger' if nom in ['armoiries.png', 'cachet.png'] else 'bg-secondary') }}">
+                                        {{ 'Présent' if present else ('Manquant' if nom in ['armoiries.png', 'cachet.png'] else 'Optionnel') }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Serveur e-mail (notifications)</span>
+                                    <span class="badge {{ 'bg-success' if systeme.get('mail_ok') else 'bg-warning text-dark' }}">{{ 'Configuré' if systeme.get('mail_ok') else 'Non configuré' }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0"><i class='bx bx-server'></i> Informations</h5></div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between"><span>PDF générés</span><strong>{{ systeme.get('nb_pdfs', 0) }}</strong></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>Dossiers au total</span><strong>{{ stats.get('total', 0) }}</strong></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>Base de données</span><strong>{{ systeme.get('db_dialect', '—') }}</strong></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>Python</span><strong>{{ systeme.get('python', '—') }}</strong></li>
+                                <li class="list-group-item d-flex justify-content-between"><span>Flask</span><strong>{{ systeme.get('flask', '—') }}</strong></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <!-- SECTION AIDE -->
+            <!-- ============ AIDE ============ -->
             <section id="page7" class="page container py-4">
-                <h2><i class='bx bx-help-circle'></i> Centre d'Aide</h2>
-                <!-- Contenu à implémenter -->
-                <div class="alert alert-info mt-4">
-                    <i class='bx bx-info-circle'></i> Module en cours de développement
+                <h2 class="mb-4"><i class='bx bx-help-circle'></i> Centre d'Aide</h2>
+                <div class="accordion" id="aideAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#aide1">Comment créer un agent de mairie ou d'hôpital ?</button></h2>
+                        <div id="aide1" class="accordion-collapse collapse show" data-bs-parent="#aideAccordion">
+                            <div class="accordion-body">Créez d'abord la mairie ou l'hôpital, puis ajoutez l'utilisateur dans « Utilisateurs » en choisissant son rôle et sa structure de rattachement.</div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aide2">Pourquoi l'en-tête de l'acte est-il incomplet ?</button></h2>
+                        <div id="aide2" class="accordion-collapse collapse" data-bs-parent="#aideAccordion">
+                            <div class="accordion-body">Renseignez le département, l'arrondissement et la région (en anglais) de chaque mairie : bouton « Modifier » puis onglet « En-tête des actes ».</div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aide3">Que fait « Annuler un acte » ?</button></h2>
+                        <div id="aide3" class="accordion-collapse collapse" data-bs-parent="#aideAccordion">
+                            <div class="accordion-body">L'acte est marqué comme annulé mais n'est jamais supprimé : il reste consultable et peut être réactivé. L'opération est inscrite dans l'historique.</div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aide4">Pourquoi ne puis-je pas supprimer certains éléments ?</button></h2>
+                        <div id="aide4" class="accordion-collapse collapse" data-bs-parent="#aideAccordion">
+                            <div class="accordion-body">Une structure ou un utilisateur lié à des dossiers ou à des actes ne peut pas être supprimé, afin de ne jamais perdre de données d'état civil.</div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="../../static/js/bootstrap.bundle.min.js"></script>
-    <script src="../../static/js/admin.js"></script>
+    <!-- Données des graphiques et notifications : balises JSON, aucun code Jinja dans le JavaScript -->
+    {% set graph_data = {
+        'actes_months': actes_months|default([]),
+        'actes_data': actes_data|default([]),
+        'roles_labels': roles_labels|default([]),
+        'roles_data': roles_data|default([]),
+        'statuts_labels': statuts_labels|default([]),
+        'statuts_data': statuts_data|default([])
+    } %}
+    <script id="graph-data" type="application/json">{{ graph_data | tojson }}</script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Actes par mois
-    const actesLabels = JSON.parse('{{ actes_months | tojson | safe }}');
-    const actesData = JSON.parse('{{ actes_data | tojson | safe }}');
-
-    const actesCtx = document.getElementById('actesChart').getContext('2d');
-    const actesChart = new Chart(actesCtx, {
-        type: 'bar',
-        data: {
-            labels: actesLabels,
-            datasets: [{
-                label: 'Actes de naissance',
-                data: actesData,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-
-    // Répartition des rôles
-    const rolesLabels = JSON.parse('{{ roles_labels | tojson | safe }}');
-    const rolesData = JSON.parse('{{ roles_data | tojson | safe }}');
-
-    const rolesCtx = document.getElementById('rolesChart').getContext('2d');
-    const rolesChart = new Chart(rolesCtx, {
-        type: 'doughnut',
-        data: {
-            labels: rolesLabels,
-            datasets: [{
-                data: rolesData,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-});
-</script>
-
-
-
-    <!-- Gestion des messages flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const alert = document.createElement('div');
-            alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
-            alert.style.zIndex = '9999';
-            alert.innerHTML = `
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            document.body.appendChild(alert);
-
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
-        });
-    </script>
-    {% endfor %}
+    {% set flash_items = get_flashed_messages(with_categories=true) %}
+    {% if flash_items %}
+    <script id="flash-data" type="application/json">{{ flash_items | tojson }}</script>
     {% endif %}
-    {% endwith %}
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_extras.js') }}"></script>
 </body>
 
 </html>

@@ -1,32 +1,48 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash ,session
-from werkzeug.security import generate_password_hash
-from app.models import Utilisateur ,Mairie,Hopital, RoleUtilisateur,ActeNaissance
+from flask import (
+    Blueprint,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from app.models import (
+    Hopital,
+    JournalAudit,
+    Mairie,
+    RoleUtilisateur,
+    Utilisateur,
+)
 from app.database import db
-import random , string
+import secrets
+import string
 import logging
+import os
 from app import mail
 from app.config import Config
 from flask_mail import Message
-import json
-from sqlalchemy import extract, func
+import click
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 
 # pour generer un mot de passe automatiquement
 def generate_random_password(length=12):
     """Génère un mot de passe aléatoire robuste"""
-    uppercase = random.choice(string.ascii_uppercase)
-    lowercase = random.choice(string.ascii_lowercase)
-    digit = random.choice(string.digits)
-    special = random.choice("!@#$%^&*()_+-=[]{}|;:,.<>?")
+    uppercase = secrets.choice(string.ascii_uppercase)
+    lowercase = secrets.choice(string.ascii_lowercase)
+    digit = secrets.choice(string.digits)
+    special = secrets.choice("!@#$%^&*()_+-=[]{}|;:,.<>?")
     remaining = length - 4
     characters = string.ascii_letters + string.digits + "!@#$%^&*()_+-=[]{}|;:,.<>?"
-    rest = ''.join(random.choice(characters) for _ in range(remaining))
+    rest = ''.join(secrets.choice(characters) for _ in range(remaining))
     password = list(uppercase + lowercase + digit + special + rest)
-    random.shuffle(password)
+    secrets.SystemRandom().shuffle(password)
     return ''.join(password)
 
 # message deja cree
-def send_welcome_email(email, nom, mot_de_passe, role, code=None):
+def send_welcome_email(email, nom, role, code=None):
     """Envoie un email de bienvenue personnalisé selon le rôle."""
     try:
         # Définir un nom de rôle lisible
@@ -61,13 +77,10 @@ def send_welcome_email(email, nom, mot_de_passe, role, code=None):
 
 Votre compte a été créé avec succès sur la plateforme de gestion des actes de naissance.
 
-🔐 Informations de connexion :
-📧 Email : {email}
-🔑 Mot de passe : {mot_de_passe}{code_info}
+📧 Identifiant : {email}{code_info}
+Pour définir votre mot de passe, ouvrez la page de connexion et utilisez le lien « Mot de passe oublié ».
 
 {role_instructions}
-
-Nous vous conseillons de modifier votre mot de passe dès votre première connexion.
 
 Bien cordialement,
 L’équipe administrative
@@ -81,58 +94,94 @@ L’équipe administrative
 
 admin_bp = Blueprint('admin', __name__)
 
+
+def _record_admin_action(action, record_type, record_id):
+    db.session.add(
+        JournalAudit(
+            utilisateur_id=session.get('utilisateur_id'),
+            action=action,
+            type_enregistrement=record_type,
+            identifiant_enregistrement=record_id,
+            adresse_ip=request.remote_addr,
+        )
+    )
+
+
+@admin_bp.before_request
+def require_admin():
+    user_id = session.get('utilisateur_id')
+    if not isinstance(user_id, int):
+        session.clear()
+        flash("Veuillez vous connecter avec un compte administrateur.", "warning")
+        return redirect(url_for('auth.login'))
+
+    utilisateur = db.session.get(Utilisateur, user_id)
+    if utilisateur is None:
+        session.clear()
+        flash("Votre session a expiré. Veuillez vous reconnecter.", "warning")
+        return redirect(url_for('auth.login'))
+    if utilisateur.role is not RoleUtilisateur.ADMIN:
+        abort(403)
+
+    session['role'] = utilisateur.role.value
+    session['nom_utilisateur'] = utilisateur.nom_utilisateur
+    session['hopital_id'] = utilisateur.hopital_id
+    session['mairie_id'] = utilisateur.mairie_id
+
+
+@admin_bp.cli.command("create-admin")
+def create_admin():
+    """Cree le compte administrateur initial depuis la CLI Flask."""
+    username = os.getenv("ADMIN_USERNAME", "Fozet Junior").strip()
+    email = os.getenv("ADMIN_EMAIL", "fozetj29@fmail.com").strip()
+    password = os.getenv("ADMIN_PASSWORD")
+
+    if not username or len(username) > 80:
+        raise click.ClickException("ADMIN_USERNAME doit contenir entre 1 et 80 caracteres.")
+    if not email or len(email) > 120:
+        raise click.ClickException("ADMIN_EMAIL doit contenir entre 1 et 120 caracteres.")
+
+    if password is None:
+        password = click.prompt(
+            "Mot de passe administrateur",
+            hide_input=True,
+            confirmation_prompt=True,
+        )
+
+    if len(password) < 12:
+        raise click.ClickException("Le mot de passe doit contenir au moins 12 caracteres.")
+
+    existing_account = Utilisateur.query.filter(
+        (Utilisateur.nom_utilisateur == username) | (Utilisateur.email == email)
+    ).first()
+    if existing_account:
+        raise click.ClickException(
+            "Un compte utilise deja ce nom ou cette adresse email; aucune modification effectuee."
+        )
+
+    admin = Utilisateur(
+        nom_utilisateur=username,
+        email=email,
+        role=RoleUtilisateur.ADMIN,
+    )
+    admin.set_password(password)
+    db.session.add(admin)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as error:
+        db.session.rollback()
+        raise click.ClickException("Impossible de creer le compte administrateur.") from error
+
+    click.echo(f"Compte administrateur cree : {username} ({email})")
+
+
 # Route d'affichage du dashboard
 @admin_bp.route('/admin')
 def dashboard():
-    # Données brutes
-    mairies = Mairie.query.all()
-    hopitaux = Hopital.query.all()
-    utilisateurs = Utilisateur.query.all()
+    from .admin_extras import contexte_admin
 
-    # --- Statistiques Actes par mois (12 derniers mois) ---
-    now = datetime.now()
-    actes = (
-        db.session.query(
-            extract('month', ActeNaissance.date_enregistrement).label('mois'),
-            func.count(ActeNaissance.id)
-        )
-        .group_by('mois')
-        .order_by('mois')
-        .all()
-    )
-
-    mois_liste = []
-    nb_actes_par_mois = []
-
-    mois_noms = ['Janv', 'Févr', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
-    for mois, count in actes:
-        mois_liste.append(mois_noms[int(mois) - 1])
-        nb_actes_par_mois.append(count)
-
-    # --- Statistiques des rôles des utilisateurs ---
-    role_counts = (
-        db.session.query(
-            Utilisateur.role,
-            func.count(Utilisateur.id)
-        )
-        .group_by(Utilisateur.role)
-        .all()
-    )
-
-    roles_noms = [role.value for role, _ in role_counts]
-    roles_valeurs = [count for _, count in role_counts]
-
-    return render_template(
-        'admin/dashboard.html',
-        mairies=mairies,
-        hopitaux=hopitaux,
-        utilisateurs=utilisateurs,
-        actes_months=json.dumps(mois_liste),
-        actes_data=json.dumps(nb_actes_par_mois),
-        roles_labels=json.dumps(roles_noms),
-        roles_data=json.dumps(roles_valeurs),
-        now=datetime.now()
-    )
+    return render_template('admin/dashboard.html', **contexte_admin())
 
 # Ajouter un utilisateur (déjà donné par toi)
 @admin_bp.route('/utilisateur/ajouter', methods=['POST'])
@@ -147,6 +196,9 @@ def ajouter_utilisateur():
 
         if not nom_utilisateur or not email or not mot_de_passe:
             flash("Champs obligatoires manquants", "danger")
+            return redirect(url_for('admin.dashboard'))
+        if len(mot_de_passe) < 12:
+            flash("Le mot de passe doit contenir au moins 12 caractères.", "danger")
             return redirect(url_for('admin.dashboard'))
 
         # Vérifier l’unicité
@@ -168,9 +220,15 @@ def ajouter_utilisateur():
         utilisateur.set_password(mot_de_passe)
 
         db.session.add(utilisateur)
+        db.session.flush()
+        _record_admin_action(
+            f"Création du compte {nom_utilisateur}",
+            "Utilisateur",
+            utilisateur.id,
+        )
         db.session.commit()
 
-        send_welcome_email(email=email, nom=nom_utilisateur, mot_de_passe=mot_de_passe, role=role)
+        send_welcome_email(email=email, nom=nom_utilisateur, role=role)
         flash("✅ Utilisateur ajouté avec succès", "success")
     except Exception as e:
         db.session.rollback()
@@ -194,8 +252,16 @@ def modifier_utilisateur(utilisateur_id):
 
         mot_de_passe = request.form.get('mot_de_passe')
         if mot_de_passe:
-            utilisateur.mot_de_passe_hash = generate_password_hash(mot_de_passe)
+            if len(mot_de_passe) < 12:
+                flash("Le mot de passe doit contenir au moins 12 caractères.", "danger")
+                return redirect(url_for('admin.dashboard'))
+            utilisateur.set_password(mot_de_passe)
 
+        _record_admin_action(
+            f"Modification du compte {utilisateur.nom_utilisateur}",
+            "Utilisateur",
+            utilisateur.id,
+        )
         db.session.commit()
         flash("✅ Utilisateur modifié avec succès", "success")
     except Exception as e:
@@ -209,6 +275,12 @@ def modifier_utilisateur(utilisateur_id):
 def supprimer_utilisateur(utilisateur_id):
     utilisateur = Utilisateur.query.get_or_404(utilisateur_id)
     try:
+        username = utilisateur.nom_utilisateur
+        _record_admin_action(
+            f"Suppression du compte {username}",
+            "Utilisateur",
+            utilisateur.id,
+        )
         db.session.delete(utilisateur)
         db.session.commit()
         flash("✅ Utilisateur supprimé avec succès", "success")
@@ -235,9 +307,11 @@ def ajouter_mairie():
         numero_telephone=request.form.get('numero_telephone')
     )
     db.session.add(mairie)
+    db.session.flush()
+    _record_admin_action(f"Création de la mairie {mairie.nom}", "Mairie", mairie.id)
     db.session.commit()
     flash("Mairie ajoutée avec succès", "success")
-    return redirect(url_for('admin.liste_mairies'))
+    return redirect(url_for('admin.dashboard', _anchor='page3'))
 
 #Modifier une mairie
 @admin_bp.route('/admin/mairie/modifier/<int:mairie_id>', methods=['POST'])
@@ -248,18 +322,20 @@ def modifier_mairie(mairie_id):
     mairie.region = request.form['region']
     mairie.email_contact = request.form.get('email_contact')
     mairie.numero_telephone = request.form.get('numero_telephone')
+    _record_admin_action(f"Modification de la mairie {mairie.nom}", "Mairie", mairie.id)
     db.session.commit()
     flash("Mairie modifiée avec succès", "warning")
-    return redirect(url_for('admin.liste_mairies'))
+    return redirect(url_for('admin.dashboard', _anchor='page3'))
 
-# Supremer une mairie 
+# Supremer une mairie
 @admin_bp.route('/admin/mairie/supprimer/<int:mairie_id>', methods=['POST'])
 def supprimer_mairie(mairie_id):
     mairie = Mairie.query.get_or_404(mairie_id)
+    _record_admin_action(f"Suppression de la mairie {mairie.nom}", "Mairie", mairie.id)
     db.session.delete(mairie)
     db.session.commit()
     flash("Mairie supprimée", "danger")
-    return redirect(url_for('admin.liste_mairies'))
+    return redirect(url_for('admin.dashboard', _anchor='page3'))
 
 #ajouter hopital
 @admin_bp.route('/admin/hopital/ajouter', methods=['POST'])
@@ -282,6 +358,8 @@ def ajouter_hopital():
         numero_telephone=numero_telephone
     )
     db.session.add(hopital)
+    db.session.flush()
+    _record_admin_action(f"Création de l'hôpital {hopital.nom}", "Hôpital", hopital.id)
     db.session.commit()
     flash("✅ Hôpital ajouté avec succès", "success")
     return redirect(url_for('admin.dashboard'))
@@ -297,6 +375,7 @@ def modifier_hopital(hopital_id):
     hopital.email_contact = request.form.get('email_contact')
     hopital.numero_telephone = request.form.get('numero_telephone')
 
+    _record_admin_action(f"Modification de l'hôpital {hopital.nom}", "Hôpital", hopital.id)
     db.session.commit()
     flash("✏️ Hôpital modifié avec succès", "info")
     return redirect(url_for('admin.dashboard'))
@@ -305,7 +384,11 @@ def modifier_hopital(hopital_id):
 @admin_bp.route('/admin/hopital/supprimer/<int:hopital_id>', methods=['POST'])
 def supprimer_hopital(hopital_id):
     hopital = Hopital.query.get_or_404(hopital_id)
+    _record_admin_action(f"Suppression de l'hôpital {hopital.nom}", "Hôpital", hopital.id)
     db.session.delete(hopital)
     db.session.commit()
     flash("🗑️ Hôpital supprimé avec succès", "warning")
     return redirect(url_for('admin.dashboard'))
+
+
+from . import admin_extras  # noqa: E402,F401

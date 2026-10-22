@@ -1,16 +1,36 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from datetime import datetime, timedelta,timezone
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.exc import SQLAlchemyError
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash, session
+from datetime import datetime, timedelta, timezone
+import hmac
+import secrets
 from flask_mail import Message
-import random, string, logging
-import time
+from sqlalchemy.exc import SQLAlchemyError
 from ..config import Config
 from app.models import Utilisateur, RoleUtilisateur
 from app.database import db
 from .. import mail  # Extension mail importée depuis __init__
 
 auth_bp = Blueprint('auth', __name__)
+RESET_CODE_LIFETIME = timedelta(minutes=30)
+RESET_REQUEST_COOLDOWN = timedelta(minutes=1)
+MAX_RESET_ATTEMPTS = 5
+
+
+def _hash_reset_code(code):
+    key = current_app.secret_key
+    if isinstance(key, str):
+        key = key.encode("utf-8")
+    return hmac.new(key, code.encode("utf-8"), "sha256").hexdigest()
+
+
+def _as_utc(value):
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _clear_reset_session():
+    session.pop('email_reset', None)
+    session.pop('email_verified', None)
 
 @auth_bp.route('/login', methods=['GET'])
 def login():
@@ -18,12 +38,15 @@ def login():
 
 @auth_bp.route('/login', methods=['POST'])
 def login_post():
-    email = request.form.get('email')
-    mot_de_passe = request.form.get('mot_de_passe')
+    email = (request.form.get('email') or '').strip()
+    mot_de_passe = request.form.get('mot_de_passe') or ''
+    session.clear()
 
     utilisateur = Utilisateur.query.filter_by(email=email).first()
 
     if utilisateur and utilisateur.check_password(mot_de_passe):
+        session.clear()
+        session.permanent = True
         session['utilisateur_id'] = utilisateur.id
         session['role'] = utilisateur.role.value
         session['nom_utilisateur'] = utilisateur.nom_utilisateur
@@ -47,117 +70,168 @@ def login_post():
 @auth_bp.route('/forgetpassword', methods=['GET', 'POST'])
 def forget_password():
     if request.method == 'POST':
-        email = request.form.get('email').strip()
-        utilisateur = Utilisateur.query.filter_by(email=email).first()
+        email = (request.form.get('email') or '').strip()
+        _clear_reset_session()
+        utilisateur = (
+            Utilisateur.query.filter_by(email=email).with_for_update().first()
+        )
 
-        if utilisateur:
-            try:
-                # 1. Définir le décalage horaire pour le Cameroun (UTC+1)
-                cameroon_tz = timezone(timedelta(hours=1))
-                
-                # 2. Générer le code
-                reset_code = ''.join(random.choices(string.digits, k=6))
-                
-                # 3. Utiliser l'heure locale avec fuseau horaire
-                now_local = datetime.now(cameroon_tz)
-                expiry_local = now_local + timedelta(minutes=30)
-                
-                # 4. Convertir en UTC pour le stockage
-                expiry_utc = expiry_local.astimezone(timezone.utc)
-                
-                # 5. Stockage dans la base
-                utilisateur.reset_code = reset_code
-                utilisateur.reset_code_expiry = expiry_utc
-                db.session.commit()
+        if not utilisateur:
+            flash("Aucun compte n'est associé à cette adresse e-mail.", "danger")
+            return render_template('auth/forgetpassword.html', email=email)
 
-                # 6. Envoi du mail avec l'heure locale
-                msg = Message(
-                    subject="🔐 Code de vérification",
-                    sender=Config.MAIL_DEFAULT_SENDER,
-                    recipients=[email],
-                    html=f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
-                        <h2 style="color: #2c3e50;">Réinitialisation de mot de passe</h2>
-                        <p>Voici votre code de vérification :</p>
-                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">
-                            {reset_code}
-                        </div>
-                        <p style="font-size: 12px; color: #7f8c8d;">
-                            ⏳ Ce code expire le {expiry_local.strftime('%d/%m/%Y à %H:%M')} (heure locale).
-                        </p>
-                    </div>
-                    """
-                )
-                mail.send(msg)
-                
+        now_utc = datetime.now(timezone.utc)
+        requested_at = utilisateur.reset_requested_at
+        cooldown_active = (
+            requested_at is not None
+            and now_utc - _as_utc(requested_at) < RESET_REQUEST_COOLDOWN
+        )
+
+        if cooldown_active:
+            code_is_valid = (
+                utilisateur.reset_code
+                and utilisateur.reset_code_expiry
+                and now_utc <= _as_utc(utilisateur.reset_code_expiry)
+            )
+            if code_is_valid:
                 session['email_reset'] = email
-                flash("✅ Un code a été envoyé à votre adresse email.", "success")
+                flash(
+                    "Un code vient d'être envoyé. Consultez votre boîte e-mail "
+                    "ou attendez une minute avant d'en demander un autre.",
+                    "info",
+                )
                 return redirect(url_for('auth.verify_code'))
 
-            except Exception as e:
+            flash(
+                "Veuillez attendre une minute avant de demander un nouveau code.",
+                "warning",
+            )
+            return redirect(url_for('auth.forget_password'))
+
+        reset_code = f"{secrets.randbelow(1_000_000):06d}"
+        utilisateur.reset_code = _hash_reset_code(reset_code)
+        utilisateur.reset_code_expiry = now_utc + RESET_CODE_LIFETIME
+        utilisateur.reset_attempts = 0
+        utilisateur.reset_requested_at = now_utc
+        utilisateur.reset_verified = False
+
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            current_app.logger.exception(
+                "Impossible d'enregistrer une demande de reinitialisation."
+            )
+            flash(
+                "Impossible de traiter votre demande pour le moment. Réessayez plus tard.",
+                "danger",
+            )
+            return redirect(url_for('auth.forget_password'))
+
+        try:
+            msg = Message(
+                subject="Code de vérification",
+                sender=Config.MAIL_DEFAULT_SENDER,
+                recipients=[email],
+                body=(
+                    "Votre code de réinitialisation est : "
+                    f"{reset_code}\nIl expire dans 30 minutes."
+                ),
+            )
+            mail.send(msg)
+        except Exception:
+            current_app.logger.exception(
+                "Echec d'envoi du code de reinitialisation."
+            )
+            utilisateur.reset_code = None
+            utilisateur.reset_code_expiry = None
+            utilisateur.reset_attempts = 0
+            utilisateur.reset_requested_at = None
+            utilisateur.reset_verified = False
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
                 db.session.rollback()
-                flash("❌ Erreur lors de l'envoi du code.", "danger")
-                logging.error(f"Erreur reset password: {str(e)}")
-        else:
-            flash("⚠️ Aucun utilisateur trouvé avec cet email.", "warning")
+                current_app.logger.exception(
+                    "Impossible d'invalider le code apres l'echec d'envoi."
+                )
+            flash(
+                "Le courriel n'a pas pu être envoyé. Vérifiez votre configuration "
+                "ou réessayez plus tard.",
+                "danger",
+            )
+            return redirect(url_for('auth.forget_password'))
+
+        session['email_reset'] = email
+        flash("Un code de vérification vient de vous être envoyé par e-mail.", "success")
+        return redirect(url_for('auth.verify_code'))
 
     return render_template('auth/forgetpassword.html')
 
 
 @auth_bp.route('/verify-code', methods=['GET', 'POST'])
 def verify_code():
+    email = session.get('email_reset')
+    if not email:
+        flash("Aucune demande de vérification active. Demandez d'abord un code.", "warning")
+        return redirect(url_for('auth.forget_password'))
+
     if request.method == 'POST':
         code_saisi = request.form.get('code', '').strip()
-        email = session.get('email_reset')
-
-        if not email:
-            flash("⏱️ Session expirée. Veuillez recommencer la procédure.", "danger")
-            return redirect(url_for('auth.forget_password'))
 
         utilisateur = Utilisateur.query.filter_by(email=email).first()
         
         if not utilisateur or not utilisateur.reset_code or not utilisateur.reset_code_expiry:
             flash("❌ Code invalide ou déjà utilisé.", "danger")
+            _clear_reset_session()
             return redirect(url_for('auth.forget_password'))
 
-        # Vérification de l'expiration avec gestion des fuseaux horaires
         now_utc = datetime.now(timezone.utc)
-        
-        # S'assurer que reset_code_expiry est aussi timezone-aware
-        if utilisateur.reset_code_expiry.tzinfo is None:
-            # Si la date en base est naive, on la considère comme UTC
-            expiry_aware = utilisateur.reset_code_expiry.replace(tzinfo=timezone.utc)
-        else:
-            expiry_aware = utilisateur.reset_code_expiry
-            
-        if now_utc > expiry_aware:
+        if now_utc > _as_utc(utilisateur.reset_code_expiry):
+            utilisateur.reset_code = None
+            utilisateur.reset_code_expiry = None
+            utilisateur.reset_attempts = 0
+            utilisateur.reset_verified = False
+            db.session.commit()
+            _clear_reset_session()
             flash("⌛ Le code a expiré. Veuillez en demander un nouveau.", "warning")
             return redirect(url_for('auth.forget_password'))
 
-        # Gestion des tentatives
-        nb_echecs = session.get('nb_echecs', 0)
-        if nb_echecs >= 5:
+        if utilisateur.reset_attempts >= MAX_RESET_ATTEMPTS:
             flash("🔒 Trop de tentatives échouées. La procédure a été bloquée.", "danger")
             utilisateur.reset_code = None
             utilisateur.reset_code_expiry = None
+            utilisateur.reset_attempts = 0
+            utilisateur.reset_verified = False
             db.session.commit()
-            session.pop('email_reset', None)
+            _clear_reset_session()
             return redirect(url_for('auth.forget_password'))
 
-        if utilisateur.reset_code == code_saisi:
+        if hmac.compare_digest(utilisateur.reset_code, _hash_reset_code(code_saisi)):
             session['email_verified'] = email
-            session.pop('nb_echecs', None)
-            
+            session.pop('email_reset', None)
             utilisateur.reset_code = None
             utilisateur.reset_code_expiry = None
+            utilisateur.reset_attempts = 0
+            utilisateur.reset_verified = True
             db.session.commit()
             
             flash("✅ Code vérifié avec succès. Vous pouvez maintenant définir un nouveau mot de passe.", "success")
             return redirect(url_for('auth.reset_password'))
         else:
-            session['nb_echecs'] = nb_echecs + 1
-            tentatives_restantes = 5 - session['nb_echecs']
-            flash(f"❌ Code incorrect. Il vous reste {tentatives_restantes} tentative(s).", "danger")
+            utilisateur.reset_attempts += 1
+            if utilisateur.reset_attempts >= MAX_RESET_ATTEMPTS:
+                utilisateur.reset_code = None
+                utilisateur.reset_code_expiry = None
+                utilisateur.reset_attempts = 0
+                utilisateur.reset_verified = False
+                _clear_reset_session()
+                db.session.commit()
+                flash("🔒 Trop de tentatives échouées. Demandez un nouveau code.", "danger")
+            else:
+                db.session.commit()
+                tentatives_restantes = MAX_RESET_ATTEMPTS - utilisateur.reset_attempts
+                flash(f"❌ Code incorrect. Il vous reste {tentatives_restantes} tentative(s).", "danger")
 
     return render_template('auth/verifycode.html')
 
@@ -170,8 +244,8 @@ def reset_password():
         return redirect(url_for('auth.forget_password'))
 
     if request.method == 'POST':
-        mot_de_passe = request.form.get('password', '').strip()
-        confirmation = request.form.get('confirm_password', '').strip()
+        mot_de_passe = request.form.get('password', '')
+        confirmation = request.form.get('confirm_password', '')
 
         if not mot_de_passe or not confirmation:
             flash("❌ Veuillez remplir tous les champs.", "danger")
@@ -181,37 +255,41 @@ def reset_password():
             flash("❌ Les mots de passe ne correspondent pas.", "danger")
             return redirect(url_for('auth.reset_password'))
 
-        if len(mot_de_passe) < 8:
-            flash("🔒 Le mot de passe doit contenir au moins 8 caractères.", "warning")
+        if len(mot_de_passe) < 12:
+            flash("🔒 Le mot de passe doit contenir au moins 12 caractères.", "warning")
             return redirect(url_for('auth.reset_password'))
 
         utilisateur = Utilisateur.query.filter_by(email=email).first()
-        if not utilisateur:
+        if not utilisateur or not utilisateur.reset_verified:
             flash("❌ Utilisateur introuvable.", "danger")
-            session.pop('email_verified', None)
+            _clear_reset_session()
             return redirect(url_for('auth.forget_password'))
 
         try:
             utilisateur.set_password(mot_de_passe)
             utilisateur.reset_code = None
             utilisateur.reset_code_expiry = None
+            utilisateur.reset_attempts = 0
+            utilisateur.reset_verified = False
             utilisateur.mis_a_jour_le = datetime.now(timezone.utc)
             
             db.session.commit()
             
-            session.pop('email_verified', None)
+            _clear_reset_session()
             flash("✅ Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.", "success")
             return redirect(url_for('auth.login'))
 
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            logging.error(f"Erreur lors de la réinitialisation du mot de passe: {str(e)}")
+            current_app.logger.exception(
+                "Erreur lors de la reinitialisation du mot de passe."
+            )
             flash("❌ Une erreur est survenue lors de la réinitialisation. Veuillez réessayer.", "danger")
 
     return render_template('auth/reset_password.html')
 
 
-@auth_bp.route('/logout')
+@auth_bp.route('/logout', methods=['POST'])
 def logout():
     session.clear()
     return redirect(url_for('auth.login'))

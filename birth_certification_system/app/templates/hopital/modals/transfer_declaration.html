@@ -3,6 +3,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="{{ url_for('hopital.transferer_declaration', id=dossier.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class='bx bx-transfer'></i> Transférer la déclaration

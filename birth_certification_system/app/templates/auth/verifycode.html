@@ -1,54 +1,64 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vérification du Code</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0d6848">
+    <title>Vérification du code | Actes de naissance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}">
 </head>
-<body>
-<section class="home show">
-    <a href="#" class="nav_logo"><i class='bx bxs-baby-carriage'></i> Gestion Numérique des Actes de Naissance</a>
-    <div class="form_container">
-        <a href="{{ url_for('auth.forget_password') }}">
-            <i class="bx bx-x form_close"></i>
+<body class="auth-body">
+    <main class="auth-shell">
+        <a class="auth-brand" href="{{ url_for('main.index') }}">
+            <span class="auth-brand-mark"><i class="bx bxs-baby-carriage"></i></span>
+            <span>État civil <strong>Numérique</strong></span>
         </a>
-        <div class="container mt-4">
-            <h2>🔐 Vérification du Code</h2>
+
+        <section class="auth-card" aria-labelledby="auth-title">
+            <a class="auth-back" href="{{ url_for('auth.forget_password') }}">
+                <i class="bx bx-arrow-back"></i> Modifier l’adresse e-mail
+            </a>
+            <div class="auth-icon"><i class="bx bx-envelope-open"></i></div>
+            <p class="auth-eyebrow">Étape 2 sur 3</p>
+            <h1 id="auth-title">Vérifiez votre boîte e-mail</h1>
+            <p class="auth-description">
+                Entrez le code à six chiffres envoyé à l’adresse associée à votre compte.
+            </p>
+
+            {% include "auth/_messages.html" %}
+
             <form action="{{ url_for('auth.verify_code') }}" method="POST">
-                <div class="mb-3">
-                    <label for="code" class="form-label">Entrez le code reçu :</label>
-                    <input type="text" class="form-control" name="code" id="code" required maxlength="6" pattern="\d{6}" title="Code à 6 chiffres">
-                </div>
-                <button type="submit" class="button">Vérifier</button>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="auth-label" for="code">Code de vérification</label>
+                <input
+                    class="auth-code-input"
+                    type="text"
+                    name="code"
+                    id="code"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    pattern="[0-9]{6}"
+                    maxlength="6"
+                    minlength="6"
+                    placeholder="••••••"
+                    aria-describedby="code-help"
+                    required
+                    autofocus
+                >
+                <p class="auth-field-help" id="code-help">Le code expire après 30 minutes.</p>
+                <button class="auth-button" type="submit">
+                    Vérifier le code <i class="bx bx-check"></i>
+                </button>
             </form>
-        </div>
-    </div>
-</section>
+            <a class="auth-secondary-link" href="{{ url_for('auth.forget_password') }}">
+                Demander un nouveau code
+            </a>
+        </section>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-{{ category }} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
-    alert.style.zIndex = '9999';
-    alert.innerHTML = `
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    document.body.appendChild(alert);
-    setTimeout(() => alert.remove(), 5000);
-});
-</script>
-{% endfor %}
-{% endif %}
-{% endwith %}
-
-<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+        <p class="auth-copyright">République du Cameroun · Paix – Travail – Patrie</p>
+    </main>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 </html>

@@ -36,8 +36,11 @@ class Utilisateur(db.Model):
     mis_a_jour_le     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Réinitialisation de mot de passe
-    reset_code        = db.Column(db.String(10), nullable=True)  # Exemple : code à 6 chiffres ou alphanumérique
+    reset_code        = db.Column(db.String(64), nullable=True)
     reset_code_expiry = db.Column(db.DateTime(timezone=True))
+    reset_attempts = db.Column(db.Integer, nullable=False, default=0, server_default='0')
+    reset_requested_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    reset_verified = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
 
     # Lien avec un hôpital ou une mairie
     hopital_id        = db.Column(db.Integer, db.ForeignKey('hopitaux.id', ondelete='SET NULL'), nullable=True)
@@ -107,6 +110,10 @@ class Mairie(db.Model):
     nom = db.Column(db.String(100), unique=True, nullable=False)
     localisation = db.Column(db.String(100), nullable=False)
     region = db.Column(db.String(50), nullable=False)
+    # NOUVEAU : en-tête de l'acte (ex: "Mfoundi", "Yaoundé 1er", "Centre")
+    departement = db.Column(db.String(50), nullable=True)
+    arrondissement = db.Column(db.String(50), nullable=True)
+    region_en = db.Column(db.String(50), nullable=True)
     email_contact = db.Column(db.String(120), unique=True, nullable=True)
     numero_telephone = db.Column(db.String(20), nullable=True)
     cree_le = db.Column(db.DateTime, default=datetime.utcnow)
@@ -208,9 +215,18 @@ class ActeNaissance(db.Model):
     # Déclarant
     nom_complet_declarant = db.Column(db.String(200), nullable=True)
     lien_parente_declarant = db.Column(db.String(50), nullable=True)
+    # NOUVEAU : qualité complète du déclarant (ex: "Infirmier supérieur spécialisé ...")
+    qualite_declarant = db.Column(db.String(500), nullable=True)
 
     # Informations supplémentaires
     dresse_le = db.Column(db.Date, nullable=True)
+
+    # NOUVEAU : mentions affichées sur l'acte
+    date_declaration = db.Column(db.Date, nullable=True)
+    date_attestation = db.Column(db.Date, nullable=True)
+    officier_nom = db.Column(db.String(150), nullable=True)
+    secretaire_nom = db.Column(db.String(150), nullable=True)
+    nipu = db.Column(db.String(50), nullable=True)
 
     # Relations
     dossier_naissance_id = db.Column(db.Integer, db.ForeignKey('dossiers_naissance.id', ondelete='CASCADE'), unique=True, nullable=False)
@@ -220,8 +236,33 @@ class ActeNaissance(db.Model):
     chemin_pdf = db.Column(db.String(255), nullable=True)
     est_actif = db.Column(db.Boolean, default=True)
 
+    # NOUVEAU : mentions marginales (page 2 du PDF)
+    mentions_marginales = db.relationship(
+        'MentionMarginale',
+        backref='acte',
+        cascade='all, delete-orphan',
+        order_by='MentionMarginale.date_mention'
+    )
+
     def __repr__(self):
         return f"<ActeNaissance {self.numero_acte} pour {self.nom_complet_enfant}>"
+
+
+class MentionMarginale(db.Model):
+    """NOUVEAU : mention portée en marge d'un acte (reconnaissance, mariage, etc.)."""
+    __tablename__ = 'mentions_marginales'
+
+    id = db.Column(db.Integer, primary_key=True)
+    acte_id = db.Column(db.Integer, db.ForeignKey('actes_naissance.id', ondelete='CASCADE'), nullable=False)
+    type_mention = db.Column(db.String(100), nullable=False)    # ex: "Reconnaissance"
+    numero = db.Column(db.String(100), nullable=True)           # ex: "818/CE7201/2025"
+    date_mention = db.Column(db.Date, nullable=True)
+    texte = db.Column(db.String(500), nullable=False)
+    officier_nom = db.Column(db.String(150), nullable=True)
+    base_legale = db.Column(db.String(255), nullable=True)     # "Conformément à l'article 44 ..."
+
+    def __repr__(self):
+        return f"<MentionMarginale {self.type_mention} {self.numero}>"
 
 
 

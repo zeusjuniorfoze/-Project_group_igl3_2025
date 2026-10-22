@@ -1,12 +1,37 @@
-from flask import Blueprint, render_template, session, redirect, url_for, flash , request
+from flask import Blueprint, abort, render_template, session, redirect, url_for, flash , request
 from datetime import datetime , time
-from app.models import DossierNaissance, Utilisateur , db , Mairie , StatutDossier
+from app.models import DossierNaissance, Utilisateur , db , Mairie , StatutDossier, RoleUtilisateur
 from flask_mail import Message
 import logging
 from ..config import Config
 from .. import mail
 
 hopital_bp = Blueprint('hopital', __name__)
+
+
+@hopital_bp.before_request
+def require_hospital_agent():
+    user_id = session.get('utilisateur_id')
+    if not isinstance(user_id, int):
+        session.clear()
+        flash("Veuillez vous connecter avec un compte hospitalier.", "warning")
+        return redirect(url_for('auth.login'))
+
+    utilisateur = db.session.get(Utilisateur, user_id)
+    if utilisateur is None:
+        session.clear()
+        flash("Votre session a expiré. Veuillez vous reconnecter.", "warning")
+        return redirect(url_for('auth.login'))
+    if utilisateur.role is not RoleUtilisateur.AGENT_HOPITAL:
+        abort(403)
+    if utilisateur.hopital_id is None:
+        abort(403)
+
+    session['role'] = utilisateur.role.value
+    session['nom_utilisateur'] = utilisateur.nom_utilisateur
+    session['hopital_id'] = utilisateur.hopital_id
+    session['mairie_id'] = utilisateur.mairie_id
+
 
 @hopital_bp.route('/declarations')
 def dashboard():
@@ -142,7 +167,10 @@ def ajouter_declaration():
     
 @hopital_bp.route('/modifier_declaration/<int:dossier_id>', methods=['POST'])
 def modifier_declaration(dossier_id):
-    dossier = DossierNaissance.query.get_or_404(dossier_id)
+    dossier = DossierNaissance.query.filter_by(
+        id=dossier_id,
+        hopital_id=session['hopital_id'],
+    ).first_or_404()
     
     try:
         # Mise à jour des informations sur l'enfant
@@ -215,7 +243,10 @@ def modifier_declaration(dossier_id):
     
 @hopital_bp.route('/supprimer_declaration/<int:id>', methods=['POST'])
 def supprimer_declaration(id):
-    dossier = DossierNaissance.query.get_or_404(id)
+    dossier = DossierNaissance.query.filter_by(
+        id=id,
+        hopital_id=session['hopital_id'],
+    ).first_or_404()
     db.session.delete(dossier)
     db.session.commit()
     flash("Déclaration supprimée avec succès.", "success")
@@ -259,7 +290,10 @@ L'équipe administrative
 
 @hopital_bp.route('/declaration/<int:id>/transferer', methods=['POST'])
 def transferer_declaration(id):
-    dossier = DossierNaissance.query.get_or_404(id)
+    dossier = DossierNaissance.query.filter_by(
+        id=id,
+        hopital_id=session['hopital_id'],
+    ).first_or_404()
     mairie_id = request.form.get('mairie_id')
 
     if mairie_id:

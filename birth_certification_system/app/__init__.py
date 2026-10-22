@@ -2,35 +2,45 @@ import logging
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
+from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 from .config import Config
 from .database import db, check_db_connection
 
 # Extensions
 jwt = JWTManager()
 mail = Mail()
+migrate = Migrate()
+csrf = CSRFProtect()
 
-def create_app():
+
+def create_app(config=None):
     """Crée et configure l'application Flask."""
     app = Flask(__name__)
     app.config.from_object(Config)
+    if config:
+        app.config.update(config)
 
     # Initialiser les extensions
     db.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
+    migrate.init_app(app, db)
+    csrf.init_app(app)
 
-    # Activer le logging SQLAlchemy pour debug
-    logging.basicConfig()
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+    sql_logger = logging.getLogger('sqlalchemy.engine')
+    sql_logger.setLevel(
+        logging.INFO if app.config['SQLALCHEMY_ECHO'] else logging.WARNING
+    )
 
     with app.app_context():
-        print("🔍 Vérification de la base de données...")
+        print("Verification de la base de donnees...")
         # if check_db_connection():
         #     from .models import ...
         #     db.create_all()
-        #     print("✅ Tables créées.")
+        #     print("Tables creees.")
         # else:
-        #     print("❌ Problème de connexion.")
+        #     print("Probleme de connexion.")
 
     # ⬇️ Import des blueprints après initialisation complète
     from .routes.main import main_bp

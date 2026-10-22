@@ -3,115 +3,234 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Actes de Naissance</title>
-
-    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f8fc">
+    <meta name="description"
+        content="Une plateforme numérique pour simplifier et suivre les démarches de déclaration de naissance entre hôpitaux et mairies.">
+    <title>Accueil — État civil numérique</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-
-    <!-- Boxicons CSS (local) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='boxicons/css/boxicons.min.css') }}">
-
-    <style>
-        .hero {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-            url("{{ url_for('static', filename='images/télécharger.jpg') }}") center center no-repeat;
-            background-size: cover;
-            color: white;
-            padding: 100px 0;
-            text-shadow: 1px 1px 3px black;
-            min-height: 70vh;
-        }
-
-        .section {
-            padding: 60px 0;
-        }
-
-        .icon-box {
-            font-size: 48px;
-            color: #0d6efd;
-            margin-bottom: 15px;
-        }
-
-        .nav-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accueil.css') }}">
 </head>
 
 <body>
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+    <nav class="navbar navbar-expand-lg navbar-light site-nav" aria-label="Navigation principale">
         <div class="container">
-            <a class="navbar-brand" href="#"><i class='bx bxs-baby-carriage'></i> ActesNaissance</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            <a class="navbar-brand brand" href="#accueil" aria-label="État civil numérique — accueil">
+                <span class="brand-mark"><i class="bx bxs-star" aria-hidden="true"></i></span>
+                <span>État civil<span class="brand-accent">.</span></span>
+            </a>
+            <button class="navbar-toggler nav-toggle" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false"
+                aria-label="Ouvrir le menu">
+                <i class="bx bx-menu nav-toggle-icon" aria-hidden="true"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#">Accueil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Fonctionnalités</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Connexion</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+            <div class="collapse navbar-collapse" id="mainNavigation">
+                <ul class="navbar-nav ms-auto align-items-lg-center nav-links">
+                    <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#fonctionnalites">La plateforme</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#parcours">Comment ça marche</a></li>
+                    <li class="nav-item nav-login-item">
+                        <a class="btn btn-nav" href="{{ url_for('auth.login') }}">
+                            Se connecter <i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="hero text-center">
-        <div class="container">
-            <h1 class="display-4 fw-bold">Bienvenue dans le Système de Gestion des Actes de Naissance</h1>
-            <p class="lead">Un outil moderne, rapide et sécurisé pour gérer les certificats de naissance.</p>
-            <a href="#" class="btn btn-primary btn-lg mt-3 shadow"><i class='bx bx-play-circle'></i> Commencer</a>
-        </div>
-    </header>
+    <main>
+        <section class="hero-section" id="accueil">
+            <div class="hero-orb hero-orb-one" aria-hidden="true"></div>
+            <div class="hero-orb hero-orb-two" aria-hidden="true"></div>
+            <div class="container hero-container">
+                <div class="row align-items-center gy-5">
+                    <div class="col-lg-6 hero-copy">
+                        <div class="eyebrow">
+                            <span class="eyebrow-dot" aria-hidden="true"></span>
+                            LE SERVICE PUBLIC, EN PLUS SIMPLE
+                        </div>
+                        <h1>Chaque naissance mérite un <span>départ serein.</span></h1>
+                        <p class="hero-description">
+                            Une plateforme pensée pour faciliter la déclaration, le suivi et le traitement des actes
+                            de naissance, de l’hôpital à la mairie.
+                        </p>
+                        <div class="hero-actions">
+                            <a class="btn btn-primary-hero" href="{{ url_for('auth.login') }}">
+                                Accéder à mon espace
+                                <i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+                            </a>
+                            <a class="btn btn-secondary-hero" href="#parcours">
+                                <i class="bx bx-play-circle" aria-hidden="true"></i>
+                                Découvrir le parcours
+                            </a>
+                        </div>
+                        <div class="hero-note">
+                            <span class="hero-note-icon"><i class="bx bx-shield-quarter" aria-hidden="true"></i></span>
+                            <span>Un suivi plus clair pour les équipes et les familles.</span>
+                        </div>
+                    </div>
 
-    <!-- À propos -->
-    <section class="section bg-light text-center">
-        <div class="container">
-            <h2 class="mb-4">À propos du projet</h2>
-            <p class="lead">
-                Ce projet vise à digitaliser l'enregistrement des naissances pour simplifier les démarches
-                administratives,
-                garantir la sécurité des données personnelles et améliorer l'accès aux documents officiels.
-            </p>
-        </div>
-    </section>
+                    <div class="col-lg-6 hero-visual" aria-label="Illustration d'un acte de naissance numérique">
+                        <div class="visual-glow" aria-hidden="true"></div>
+                        <div class="floating-badge badge-secure">
+                            <span class="floating-badge-icon"><i class="bx bx-check-shield"
+                                    aria-hidden="true"></i></span>
+                            <span><strong>Suivi simplifié</strong><small>À chaque étape</small></span>
+                        </div>
+                        <div class="document-scene">
+                            <div class="document-shadow" aria-hidden="true"></div>
+                            <article class="birth-document">
+                                <div class="document-topline">
+                                    <span class="document-seal"><i class="bx bx-fingerprint"
+                                            aria-hidden="true"></i></span>
+                                    <span class="document-tag">DOCUMENT NUMÉRIQUE</span>
+                                </div>
+                                <div class="document-heading">
+                                    <span class="document-overline">ÉTAT CIVIL</span>
+                                    <h2>Acte de naissance</h2>
+                                    <p>Une identité, une histoire, un avenir.</p>
+                                </div>
+                                <div class="document-rule"></div>
+                                <div class="document-field document-field-name">
+                                    <span>ENREGISTREMENT</span>
+                                    <strong>Une démarche accompagnée</strong>
+                                </div>
+                                <div class="document-fields">
+                                    <div class="document-field">
+                                        <span>ORIGINE</span>
+                                        <strong>Établissement de santé</strong>
+                                    </div>
+                                    <div class="document-field">
+                                        <span>TRANSMISSION</span>
+                                        <strong>Service d’état civil</strong>
+                                    </div>
+                                </div>
+                                <div class="document-bottom">
+                                    <span class="document-status"><span aria-hidden="true"></span> Parcours suivi</span>
+                                    <span class="document-code"><i class="bx bx-qr" aria-hidden="true"></i></span>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="floating-badge badge-connected">
+                            <span class="connected-icon"><i class="bx bx-git-merge" aria-hidden="true"></i></span>
+                            <span><strong>Hôpital <i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+                                    Mairie</strong><small>Des acteurs mieux coordonnés</small></span>
+                        </div>
+                        <span class="visual-sparkle sparkle-one" aria-hidden="true">✳</span>
+                        <span class="visual-sparkle sparkle-two" aria-hidden="true">✳</span>
+                    </div>
+                </div>
+                <a class="scroll-cue" href="#fonctionnalites">
+                    <span class="scroll-cue-line" aria-hidden="true"></span>
+                    Découvrir la plateforme
+                </a>
+            </div>
+        </section>
 
-    <!-- Fonctionnalités -->
-    <section class="section text-center">
-        <div class="container">
-            <h2 class="mb-5">Fonctionnalités principales</h2>
-            <div class="row">
-                <div class="col-md-4">
-                    <i class='bx bx-shield icon-box'></i>
-                    <h4>Sécurité</h4>
-                    <p>Authentification sécurisée avec JWT et protection des données.</p>
+        <section class="intro-section" id="fonctionnalites">
+            <div class="container">
+                <div class="section-heading">
+                    <span class="section-kicker">UNE DÉMARCHE PLUS FLUIDE</span>
+                    <h2>Le bon service, au bon moment.</h2>
+                    <p>Les étapes clés réunies dans un espace conçu pour les professionnels de santé et les agents
+                        d’état civil.</p>
                 </div>
-                <div class="col-md-4">
-                    <i class='bx bx-file icon-box'></i>
-                    <h4>Formulaires intuitifs</h4>
-                    <p>Création d’actes simplifiée via une interface claire.</p>
-                </div>
-                <div class="col-md-4">
-                    <i class='bx bx-bar-chart-alt icon-box'></i>
-                    <h4>Statistiques</h4>
-                    <p>Visualisez les données clés avec des rapports dynamiques.</p>
+                <div class="row g-4 feature-grid">
+                    <div class="col-md-4">
+                        <article class="feature-card">
+                            <span class="feature-icon feature-icon-blue"><i class="bx bx-edit-alt"
+                                    aria-hidden="true"></i></span>
+                            <span class="feature-number">01</span>
+                            <h3>Déclarer</h3>
+                            <p>L’établissement de santé saisit les informations utiles et transmet le dossier à la
+                                mairie.</p>
+                            <a href="#parcours" class="feature-link">Comprendre les étapes <i
+                                    class="bx bx-right-arrow-alt" aria-hidden="true"></i></a>
+                        </article>
+                    </div>
+                    <div class="col-md-4">
+                        <article class="feature-card">
+                            <span class="feature-icon feature-icon-gold"><i class="bx bx-check-shield"
+                                    aria-hidden="true"></i></span>
+                            <span class="feature-number">02</span>
+                            <h3>Vérifier</h3>
+                            <p>Les agents municipaux retrouvent les dossiers reçus et en suivent le traitement.</p>
+                            <a href="#parcours" class="feature-link">Comprendre les étapes <i
+                                    class="bx bx-right-arrow-alt" aria-hidden="true"></i></a>
+                        </article>
+                    </div>
+                    <div class="col-md-4">
+                        <article class="feature-card">
+                            <span class="feature-icon feature-icon-green"><i class="bx bx-file"
+                                    aria-hidden="true"></i></span>
+                            <span class="feature-number">03</span>
+                            <h3>Enregistrer</h3>
+                            <p>Après validation, l’acte est préparé pour accompagner la démarche d’état civil.</p>
+                            <a href="{{ url_for('auth.login') }}" class="feature-link">Accéder à mon espace <i
+                                    class="bx bx-right-arrow-alt" aria-hidden="true"></i></a>
+                        </article>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-4 mt-5">
-        <div class="container">
-            <p class="mb-0">&copy; 2025 Projet Actes de Naissance – Tous droits réservés.</p>
+        <section class="journey-section" id="parcours">
+            <div class="container">
+                <div class="journey-panel">
+                    <div class="journey-copy">
+                        <span class="section-kicker">UN PARCOURS COORDONNÉ</span>
+                        <h2>Du premier enregistrement à la mairie.</h2>
+                        <p>Les équipes disposent d’un espace adapté à leur rôle pour transmettre et traiter les
+                            déclarations plus simplement.</p>
+                        <a class="btn btn-primary-hero" href="{{ url_for('auth.login') }}">
+                            Se connecter à la plateforme
+                            <i class="bx bx-right-arrow-alt" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div class="journey-steps">
+                        <div class="journey-step">
+                            <span class="step-icon"><i class="bx bx-plus-medical" aria-hidden="true"></i></span>
+                            <span><strong>Établissement de santé</strong><small>La naissance est déclarée</small></span>
+                            <span class="step-check"><i class="bx bx-check" aria-hidden="true"></i></span>
+                        </div>
+                        <span class="journey-connector" aria-hidden="true"></span>
+                        <div class="journey-step">
+                            <span class="step-icon step-icon-gold"><i class="bx bx-send"
+                                    aria-hidden="true"></i></span>
+                            <span><strong>Transmission</strong><small>Le dossier est orienté vers la mairie</small></span>
+                            <span class="step-check"><i class="bx bx-check" aria-hidden="true"></i></span>
+                        </div>
+                        <span class="journey-connector" aria-hidden="true"></span>
+                        <div class="journey-step">
+                            <span class="step-icon step-icon-green"><i class="bx bx-buildings"
+                                    aria-hidden="true"></i></span>
+                            <span><strong>Service d’état civil</strong><small>Le dossier est examiné par les agents</small></span>
+                            <span class="step-check"><i class="bx bx-time-five" aria-hidden="true"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" id="contact">
+        <div class="container footer-content">
+            <a class="brand footer-brand" href="#accueil">
+                <span class="brand-mark"><i class="bx bxs-baby-carriage" aria-hidden="true"></i></span>
+                <span>État civil<span class="brand-accent">.</span></span>
+            </a>
+            <p>Faciliter les démarches, accompagner chaque naissance.</p>
+            <a class="footer-login" href="{{ url_for('auth.login') }}">Accès professionnel <i
+                    class="bx bx-right-arrow-alt" aria-hidden="true"></i></a>
+        </div>
+        <div class="container footer-bottom">
+            <span>&copy; 2026 — Plateforme de gestion des actes de naissance</span>
+            <a href="#accueil">Retour en haut <i class="bx bx-up-arrow-alt" aria-hidden="true"></i></a>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 </body>
 

@@ -20,6 +20,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('mairie.modifier_declaration', dossier_id=dossier.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header bg-warning text-white">
                     <h5 class="modal-title" id="modalEditDeclarationLabel{{ dossier.id }}">
                         <i class='bx bx-edit'></i> Modifier la Déclaration

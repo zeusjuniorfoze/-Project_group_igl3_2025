@@ -27,9 +27,12 @@
         </ul>
 
         <div class="logout-btn">
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-con text-white">
-                <i class='bx bx-log-out'></i> Déconnexion
-            </a>
+            <form method="POST" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-con text-white">
+                    <i class='bx bx-log-out'></i> Déconnexion
+                </button>
+            </form>
         </div>
     </div>
 
@@ -163,6 +166,7 @@
 
                             <form method="POST" action="{{ url_for('hopital.supprimer_declaration', id=dossier.id) }}"
                                 class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-danger btn-sm"
                                     onclick="return confirm('Confirmer la suppression ?')">
                                     <i class='bx bx-trash'></i>

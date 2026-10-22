@@ -1,124 +1,104 @@
-<style>
-    .border-bottom {
-        border-bottom: 1px solid #000 !important;
-    }
-
-    input.border-0:focus {
-        outline: none;
-        box-shadow: none;
-        border-bottom: 1px solid #000;
-    }
-</style>
-<!-- Modal Générer Acte -->
+{# Modal Générer / Régénérer l'acte — inclus dans la boucle des dossiers (variable : dossier) #}
+{% set acte = dossier.acte_naissance %}
 <div class="modal fade" id="modalGenererActe{{ dossier.id }}" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <form action="{{ url_for('mairie.generer_acte', id=dossier.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class='bx bx-file-blank'></i> Générer l'Acte de Naissance</h5>
+                    <h5 class="modal-title">
+                        <i class='bx bx-file-blank'></i>
+                        {{ "Régénérer" if acte else "Générer" }} l'acte de naissance
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
                 <div class="modal-body">
-                    <div class="border p-4" style="border: 1px solid #ccc; font-family: 'Georgia', serif;">
-                        <!-- En-tête -->
-                        <h5 class="text-center mb-2 text-uppercase">
-                            <strong><i class='bx bx-building-house'></i> Centre d’État Civil</strong><br>
-                            <small>Civil Status Registration Centre</small>
-                        </h5>
-                        <h4 class="text-center mb-3 text-uppercase">
-                            <strong><i class='bx bx-child'></i> Acte de Naissance</strong><br>
-                            <small><strong><i class='bx bx-duplicate'></i> Birth Certificate</strong></small>
-                        </h4>
 
-                        <!-- Numéro acte -->
-                        <p class="text-end">
-                            <strong><i class='bx bx-hash'></i> N°</strong>
-                            <input type="text" name="numero_acte"
-                                value="{{ '%04d'|format(dossier.id) }}/{{ dossier.date_naissance.year if dossier.date_naissance else '' }}"
-                                class="border-0 border-bottom" style="width: 200px;">
-                        </p>
+                    {# Récapitulatif (lecture seule : ces données viennent du dossier) #}
+                    <div class="alert alert-light border small">
+                        <strong>Enfant :</strong> {{ dossier.nom_enfant }} {{ dossier.prenom_enfant }}
+                        — {{ dossier.sexe_enfant }}, né(e) le
+                        {{ dossier.date_naissance.strftime('%d/%m/%Y') if dossier.date_naissance else '' }}
+                        à {{ dossier.lieu_naissance }}<br>
+                        <strong>Père :</strong> {{ dossier.nom_pere or '---' }} {{ dossier.prenom_pere or '' }} |
+                        <strong>Mère :</strong> {{ dossier.nom_mere }} {{ dossier.prenom_mere }}<br>
+                        <span class="text-muted">Pour corriger ces informations, utilisez le bouton « Modifier » de la déclaration.</span>
+                    </div>
 
-                        <!-- Infos enfant -->
-                        <p><i class='bx bx-user'></i> <strong>Nom de l’enfant :</strong>
-                            <input type="text" name="nom_enfant"
-                                value="{{ dossier.nom_enfant }} {{ dossier.prenom_enfant }}"
-                                class="border-0 border-bottom" style="width: 70%;">
-                        </p>
-                        <p><i class='bx bx-calendar'></i> <strong>Date de naissance :</strong>
-                            <input type="text" name="date_naissance"
-                                value="{{ dossier.date_naissance.strftime('%d %B %Y') if dossier.date_naissance else '' }}"
-                                class="border-0 border-bottom" style="width: 50%;">
-                        </p>
-                        <p><i class='bx bx-time'></i> <strong>Heure de naissance :</strong>
-                            <input type="text" name="heure_naissance"
-                                value="{{ dossier.heure_naissance.strftime('%Hh%M') if dossier.heure_naissance else '' }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
-                        <p><i class='bx bx-male-female'></i> <strong>Sexe de l'enfant :</strong>
-                            <input type="text" name="sexe_enfant"
-                                value="{{ dossier.sexe_enfant or '' }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
-                        <p><i class='bx bx-map'></i> <strong>Lieu de naissance :</strong>
-                            <input type="text" name="lieu_naissance"
-                                value="{{ dossier.lieu_naissance or '' }}"
-                                class="border-0 border-bottom" style="width: 60%;">
-                        </p>
+                    <h6 class="text-success mt-3">Acte</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">N° de l'acte <span class="text-danger">*</span></label>
+                            <input type="text" name="numero_acte" class="form-control" required
+                                   value="{{ acte.numero_acte if acte else '%d/CE/N/%04d'|format(dossier.date_naissance.year if dossier.date_naissance else 0, dossier.id) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">NIPU</label>
+                            <input type="text" name="nipu" class="form-control"
+                                   value="{{ acte.nipu if acte and acte.nipu else '' }}">
+                        </div>
+                    </div>
 
-                        <!-- Père -->
-                        <h6 class="text-primary mt-4"><i class='bx bx-male'></i> Père</h6>
-                        <p><i class='bx bx-user'></i> <strong>Nom :</strong>
-                            <input type="text" name="nom_pere"
-                                value="{{ dossier.nom_pere or '' }} {{ dossier.prenom_pere or '' }}"
-                                class="border-0 border-bottom" style="width: 60%;">
-                        </p>
-                        <p><i class='bx bx-map'></i> <strong>Lieu de naissance :</strong>
-                            <input type="text" name="lieu_naissance_pere"
-                                value="{{ dossier.lieu_naissance_pere or '' }}"
-                                class="border-0 border-bottom" style="width: 30%;">
-                        </p>
-                        <p><i class='bx bx-briefcase'></i> <strong>Profession :</strong>
-                            <input type="text" name="profession_pere"
-                                value="{{ dossier.profession_pere or '' }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
-                        <p><i class='bx bx-home'></i> <strong>Domicile :</strong>
-                            <input type="text" name="domicile_pere"
-                                value="{{ dossier.domicile_pere or '' }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
+                    <h6 class="text-success mt-4">Père</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Domicile du père</label>
+                            <input type="text" name="domicile_pere" class="form-control"
+                                   value="{{ acte.domicile_pere if acte and acte.domicile_pere else '' }}">
+                        </div>
+                    </div>
 
-                        <!-- Mère -->
-                        <h6 class="text-primary mt-4"><i class='bx bx-female'></i> Mère</h6>
-                        <p><i class='bx bx-user'></i> <strong>Nom :</strong>
-                            <input type="text" name="nom_mere"
-                                value="{{ dossier.nom_mere or '' }} {{ dossier.prenom_mere or '' }}"
-                                class="border-0 border-bottom" style="width: 60%;">
-                        </p>
-                        <p><i class='bx bx-map'></i> <strong>Lieu de naissance :</strong>
-                            <input type="text" name="lieu_naissance_mere"
-                                value="{{ dossier.lieu_naissance_mere or '' }}"
-                                class="border-0 border-bottom" style="width: 30%;">
-                        </p>
-                        <p><i class='bx bx-briefcase'></i> <strong>Profession :</strong>
-                            <input type="text" name="profession_mere"
-                                value="{{ dossier.profession_mere or '' }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
-                        <p><i class='bx bx-home'></i> <strong>Domicile :</strong>
-                            <input type="text" name="domicile_mere"
-                                value="{{ dossier.domicile_mere or '' }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
+                    <h6 class="text-success mt-4">Mère</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Domicile de la mère</label>
+                            <input type="text" name="domicile_mere" class="form-control"
+                                   value="{{ acte.domicile_mere if acte and acte.domicile_mere else '' }}">
+                        </div>
+                    </div>
 
-                        <!-- Infos supplémentaires -->
-                        <h6 class="text-primary mt-4"><i class='bx bx-calendar'></i> Informations supplémentaires</h6>
-                        <p><i class='bx bx-calendar'></i> <strong>Dressé le :</strong>
-                            <input type="date" name="dresse_le"
-                                value="{{ current_date.strftime('%Y-%m-%d') }}"
-                                class="border-0 border-bottom" style="width: 40%;">
-                        </p>
+                    <h6 class="text-success mt-4">Déclaration</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Déclaré le</label>
+                            <input type="date" name="date_declaration" class="form-control"
+                                   value="{{ (acte.date_declaration if acte and acte.date_declaration else dossier.date_soumission).strftime('%Y-%m-%d') if (acte and acte.date_declaration) or dossier.date_soumission else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Attesté le</label>
+                            <input type="date" name="date_attestation" class="form-control"
+                                   value="{{ acte.date_attestation.strftime('%Y-%m-%d') if acte and acte.date_attestation else current_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Qualité du déclarant</label>
+                            <input type="text" name="qualite_declarant" class="form-control"
+                                   placeholder="Ex : Infirmier supérieur spécialisé en anesthésie réanimation de la Fondation Mère Martine, DECL N°..."
+                                   value="{{ acte.qualite_declarant if acte and acte.qualite_declarant else (dossier.lien_parente_declarant or '') }}">
+                            <div class="form-text">
+                                Déclarant : {{ dossier.nom_declarant or '---' }} {{ dossier.prenom_declarant or '' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-success mt-4">Officier d'état civil et secrétaire</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Officier d'état civil</label>
+                            <input type="text" name="officier_nom" class="form-control"
+                                   value="{{ acte.officier_nom if acte and acte.officier_nom else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Secrétaire d'état civil</label>
+                            <input type="text" name="secretaire_nom" class="form-control"
+                                   value="{{ acte.secretaire_nom if acte and acte.secretaire_nom else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Dressé le</label>
+                            <input type="date" name="dresse_le" class="form-control"
+                                   value="{{ acte.dresse_le.strftime('%Y-%m-%d') if acte and acte.dresse_le else current_date.strftime('%Y-%m-%d') }}">
+                        </div>
                     </div>
                 </div>
 
@@ -127,7 +107,7 @@
                         <i class='bx bx-x'></i> Annuler
                     </button>
                     <button type="submit" class="btn btn-success">
-                        <i class='bx bx-printer'></i> Générer l'Acte
+                        <i class='bx bx-printer'></i> {{ "Régénérer le PDF" if acte else "Générer l'acte" }}
                     </button>
                 </div>
             </form>

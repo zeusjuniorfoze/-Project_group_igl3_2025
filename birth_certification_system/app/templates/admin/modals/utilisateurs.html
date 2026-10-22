@@ -1,3 +1,63 @@
+{# Modales Utilisateurs — à inclure À L'EXTÉRIEUR du tableau (variables : utilisateurs, mairies, hopitaux) #}
+
+<!-- Modal Ajout Utilisateur : UNE seule fois, hors de toute boucle -->
+<div class="modal fade" id="modalAjoutUtilisateur" tabindex="-1" aria-labelledby="modalAjoutLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalAjoutLabel"><i class='bx bx-plus'></i> Ajouter un utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('admin.ajouter_utilisateur') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nom complet <span class="text-danger">*</span></label>
+                        <input type="text" name="nom_utilisateur" class="form-control" placeholder="Entrez le nom..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-mail <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" placeholder="Entrez l'e-mail..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Rôle <span class="text-danger">*</span></label>
+                        <select class="form-select" name="role" id="roleSelect" required>
+                            <option value="">-- Sélectionner un rôle --</option>
+                            <option value="ADMIN">Administrateur</option>
+                            <option value="AGENT_MAIRIE">Agent Mairie</option>
+                            <option value="AGENT_HOPITAL">Agent Hôpital</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="mairieSelectContainer">
+                        <label class="form-label">Mairie associée <span class="text-danger">*</span></label>
+                        <select class="form-select" name="mairie_id">
+                            <option value="">-- Choisir une mairie --</option>
+                            {% for mairie in mairies %}
+                            <option value="{{ mairie.id }}">{{ mairie.nom }} ({{ mairie.localisation }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="hopitalSelectContainer">
+                        <label class="form-label">Hôpital associé <span class="text-danger">*</span></label>
+                        <select class="form-select" name="hopital_id">
+                            <option value="">-- Choisir un hôpital --</option>
+                            {% for hopital in hopitaux %}
+                            <option value="{{ hopital.id }}">{{ hopital.nom }} ({{ hopital.localisation }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success"><i class='bx bx-save'></i> Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% for utilisateur in utilisateurs %}
 <!-- Modal Voir Utilisateur -->
 <div class="modal fade" id="modalViewUtilisateur{{ utilisateur.id }}" tabindex="-1" aria-hidden="true">
@@ -9,14 +69,16 @@
             </div>
             <div class="modal-body">
                 <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.nom_utilisateur }}</p>
-                <p><strong>Email :</strong> {{ utilisateur.email }}</p>
+                <p><strong>E-mail :</strong> {{ utilisateur.email }}</p>
                 <p><strong>Rôle :</strong> {{ utilisateur.role.value.replace('_', ' ').capitalize() }}</p>
-                {% if utilisateur.hopital_id %}
-                <p><strong>Hôpital lié :</strong> {{ utilisateur.hopital_id }}</p>
+                {% if utilisateur.hopital %}
+                <p><strong>Hôpital :</strong> {{ utilisateur.hopital.nom }} ({{ utilisateur.hopital.localisation }})</p>
                 {% endif %}
-                {% if utilisateur.mairie_id %}
-                <p><strong>Mairie liée :</strong> {{ utilisateur.mairie_id }}</p>
+                {% if utilisateur.mairie %}
+                <p><strong>Mairie :</strong> {{ utilisateur.mairie.nom }} ({{ utilisateur.mairie.localisation }})</p>
                 {% endif %}
+                <p class="mb-0"><strong>Compte créé le :</strong>
+                    {{ utilisateur.cree_le.strftime('%d/%m/%Y') if utilisateur.cree_le else '—' }}</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -34,18 +96,19 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('admin.modifier_utilisateur', utilisateur_id=utilisateur.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label>Nom complet</label>
+                        <label class="form-label">Nom complet</label>
                         <input type="text" name="nom_utilisateur" class="form-control" value="{{ utilisateur.nom_utilisateur }}" required>
                     </div>
                     <div class="mb-3">
-                        <label>Email</label>
+                        <label class="form-label">E-mail</label>
                         <input type="email" name="email" class="form-control" value="{{ utilisateur.email }}" required>
                     </div>
                     <div class="mb-3">
-                        <label>Rôle</label>
-                        <select class="form-select role-select" name="role" required>
+                        <label class="form-label">Rôle</label>
+                        <select class="form-select role-select" name="role" data-user="{{ utilisateur.id }}" required>
                             <option value="">-- Sélectionner un rôle --</option>
                             <option value="ADMIN" {% if utilisateur.role.value == 'ADMIN' %}selected{% endif %}>Administrateur</option>
                             <option value="AGENT_MAIRIE" {% if utilisateur.role.value == 'AGENT_MAIRIE' %}selected{% endif %}>Agent Mairie</option>
@@ -54,7 +117,7 @@
                     </div>
 
                     <div class="mb-3 {% if utilisateur.role.value != 'AGENT_MAIRIE' %}d-none{% endif %}" id="mairieSelectContainer-{{ utilisateur.id }}">
-                        <label>Mairie associée</label>
+                        <label class="form-label">Mairie associée</label>
                         <select class="form-select" name="mairie_id">
                             <option value="">-- Choisir une mairie --</option>
                             {% for mairie in mairies %}
@@ -66,7 +129,7 @@
                     </div>
 
                     <div class="mb-3 {% if utilisateur.role.value != 'AGENT_HOPITAL' %}d-none{% endif %}" id="hopitalSelectContainer-{{ utilisateur.id }}">
-                        <label>Hôpital associé</label>
+                        <label class="form-label">Hôpital associé</label>
                         <select class="form-select" name="hopital_id">
                             <option value="">-- Choisir un hôpital --</option>
                             {% for hopital in hopitaux %}
@@ -78,27 +141,11 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-warning"><i class='bx bx-save'></i> Enregistrer</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-warning"><i class='bx bx-save'></i> Enregistrer</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 {% endfor %}
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const roleSelect = document.getElementById('roleSelect');
-        const mairieContainer = document.getElementById('mairieSelectContainer');
-        const hopitalContainer = document.getElementById('hopitalSelectContainer');
-
-        if (roleSelect && mairieContainer && hopitalContainer) {
-            roleSelect.addEventListener('change', () => {
-                const role = roleSelect.value;
-                mairieContainer.classList.toggle('d-none', role !== 'AGENT_MAIRIE');
-                hopitalContainer.classList.toggle('d-none', role !== 'AGENT_HOPITAL');
-            });
-        }
-    });
-</script>

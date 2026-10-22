@@ -1,32 +1,42 @@
-{% for mairie in mairies %}
+{# Modales Mairies — à inclure À L'EXTÉRIEUR du tableau (variable : mairies) #}
 
-<!-- Modal Ajout Mairie -->
-<div class="modal fade" id="modalAjoutMairie" tabindex="-1">
-    <div class="modal-dialog">
+<!-- Modal Ajout Mairie : UNE seule fois, hors de toute boucle
+     (avant : elle était dans la boucle, donc absente quand il n'y avait aucune mairie) -->
+<div class="modal fade" id="modalAjoutMairie" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg">
             <form method="POST" action="{{ url_for('admin.ajouter_mairie') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">Ajouter une mairie</h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title"><i class='bx bx-plus-medical'></i> Ajouter une mairie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="text" name="nom" class="form-control mb-2" placeholder="Nom" required>
-                    <input type="text" name="localisation" class="form-control mb-2" placeholder="Localisation"
-                        required>
-                    <input type="text" name="region" class="form-control mb-2" placeholder="Région" required>
-                    <input type="email" name="email_contact" class="form-control mb-2" placeholder="Email">
-                    <input type="text" name="numero_telephone" class="form-control" placeholder="Téléphone">
+                    <label class="form-label">Nom <span class="text-danger">*</span></label>
+                    <input type="text" name="nom" class="form-control mb-2" placeholder="Ex : Yaoundé I" required>
+                    <label class="form-label">Localisation <span class="text-danger">*</span></label>
+                    <input type="text" name="localisation" class="form-control mb-2" required>
+                    <label class="form-label">Région <span class="text-danger">*</span></label>
+                    <input type="text" name="region" class="form-control mb-2" required>
+                    <label class="form-label">E-mail de contact</label>
+                    <input type="email" name="email_contact" class="form-control mb-2">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" name="numero_telephone" class="form-control">
+                    <div class="form-text mt-2">
+                        Le département, l'arrondissement et la région en anglais (en-tête des actes)
+                        se renseignent ensuite via « Modifier » → « En-tête des actes ».
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-success" type="submit">
-                        <i class='bx bx-save'></i> Enregistrer
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button class="btn btn-success" type="submit"><i class='bx bx-save'></i> Enregistrer</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+{% for mairie in mairies %}
 <!-- Modal Voir Mairie -->
 <div class="modal fade" id="modalViewMairie{{ mairie.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -39,8 +49,19 @@
                 <p><strong>Nom :</strong> {{ mairie.nom }}</p>
                 <p><strong>Localisation :</strong> {{ mairie.localisation }}</p>
                 <p><strong>Région :</strong> {{ mairie.region }}</p>
-                <p><strong>Email :</strong> {{ mairie.email_contact or 'N/A' }}</p>
+                <p><strong>E-mail :</strong> {{ mairie.email_contact or 'N/A' }}</p>
                 <p><strong>Téléphone :</strong> {{ mairie.numero_telephone or 'N/A' }}</p>
+                <hr>
+                <p class="mb-1"><strong>En-tête des actes</strong></p>
+                <p class="small mb-1">Région (EN) : {{ mairie.region_en or '—' }}</p>
+                <p class="small mb-1">Département : {{ mairie.departement or '—' }}</p>
+                <p class="small mb-3">Arrondissement : {{ mairie.arrondissement or '—' }}</p>
+                <p class="mb-1"><strong>Agents :</strong> {{ mairie.utilisateurs|length }}
+                    {% if mairie.utilisateurs %}
+                    <span class="text-muted small">({{ mairie.utilisateurs | map(attribute='nom_utilisateur') | join(', ') }})</span>
+                    {% endif %}
+                </p>
+                <p class="mb-0"><strong>Actes établis :</strong> {{ mairie.actes_naissance|length }}</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -49,27 +70,76 @@
     </div>
 </div>
 
-<!-- Modal Modifier Mairie -->
+<!-- Modal Modifier Mairie (2 onglets, 2 formulaires indépendants) -->
 <div class="modal fade" id="modalEditMairie{{ mairie.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form method="POST" action="{{ url_for('admin.modifier_mairie', mairie_id=mairie.id) }}" class="modal-content">
+        <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title">Modifier la mairie</h5>
+                <h5 class="modal-title"><i class='bx bx-edit'></i> Modifier la mairie</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <input type="text" name="nom" class="form-control mb-2" value="{{ mairie.nom }}" required>
-                <input type="text" name="localisation" class="form-control mb-2" value="{{ mairie.localisation }}"
-                    required>
-                <input type="text" name="region" class="form-control mb-2" value="{{ mairie.region }}" required>
-                <input type="email" name="email_contact" class="form-control mb-2" value="{{ mairie.email_contact }}">
-                <input type="text" name="numero_telephone" class="form-control" value="{{ mairie.numero_telephone }}">
+
+            <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mairieInfos{{ mairie.id }}"
+                        type="button" role="tab">Informations</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#mairieEntete{{ mairie.id }}"
+                        type="button" role="tab">En-tête des actes
+                        {% if not (mairie.departement and mairie.arrondissement) %}<span class="badge bg-warning text-dark">!</span>{% endif %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Onglet 1 : informations générales (route existante) -->
+                <div class="tab-pane fade show active" id="mairieInfos{{ mairie.id }}" role="tabpanel">
+                    <form method="POST" action="{{ url_for('admin.modifier_mairie', mairie_id=mairie.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-body">
+                            <label class="form-label">Nom</label>
+                            <input type="text" name="nom" class="form-control mb-2" value="{{ mairie.nom }}" required>
+                            <label class="form-label">Localisation</label>
+                            <input type="text" name="localisation" class="form-control mb-2" value="{{ mairie.localisation }}" required>
+                            <label class="form-label">Région</label>
+                            <input type="text" name="region" class="form-control mb-2" value="{{ mairie.region }}" required>
+                            <label class="form-label">E-mail de contact</label>
+                            <input type="email" name="email_contact" class="form-control mb-2" value="{{ mairie.email_contact or '' }}">
+                            <label class="form-label">Téléphone</label>
+                            <input type="text" name="numero_telephone" class="form-control" value="{{ mairie.numero_telephone or '' }}">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-warning"><i class='bx bx-save'></i> Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Onglet 2 : en-tête imprimé sur les actes PDF -->
+                <div class="tab-pane fade" id="mairieEntete{{ mairie.id }}" role="tabpanel">
+                    <form method="POST" action="{{ url_for('admin.definir_entete_mairie', mairie_id=mairie.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-body">
+                            <p class="small text-muted">Ces informations apparaissent en haut de chaque acte de naissance (PDF).</p>
+                            <label class="form-label">Département</label>
+                            <input type="text" name="departement" class="form-control mb-2" maxlength="50"
+                                placeholder="Ex : Mfoundi" value="{{ mairie.departement or '' }}">
+                            <label class="form-label">Arrondissement</label>
+                            <input type="text" name="arrondissement" class="form-control mb-2" maxlength="50"
+                                placeholder="Ex : Yaoundé 1er" value="{{ mairie.arrondissement or '' }}">
+                            <label class="form-label">Région (version anglaise)</label>
+                            <input type="text" name="region_en" class="form-control" maxlength="50"
+                                placeholder="Ex : Centre" value="{{ mairie.region_en or '' }}">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-warning"><i class='bx bx-save'></i> Enregistrer l'en-tête</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-warning">Enregistrer</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endfor %}
