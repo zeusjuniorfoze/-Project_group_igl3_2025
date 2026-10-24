@@ -167,7 +167,11 @@ class DossierNaissance(db.Model):
     nom_medecin = db.Column(db.String(100), nullable=True)
     statut = db.Column(db.Enum(StatutDossier), default=StatutDossier.EN_ATTENTE, nullable=False)
 
-    hopital_id = db.Column(db.Integer, db.ForeignKey('hopitaux.id', ondelete='CASCADE'), nullable=False)
+    hopital_id = db.Column(
+        db.Integer,
+        db.ForeignKey('hopitaux.id', ondelete='SET NULL'),
+        nullable=True,
+    )
     mairie_id = db.Column(db.Integer, db.ForeignKey('mairies.id', ondelete='SET NULL'), nullable=True)
     soumis_par_utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id', ondelete='RESTRICT'), nullable=False)
     valide_par_utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id', ondelete='SET NULL'), nullable=True)

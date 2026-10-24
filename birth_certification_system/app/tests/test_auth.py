@@ -6,6 +6,7 @@ from unittest.mock import patch
 from app import create_app
 from app.database import db
 from app.models import (
+    ActeNaissance,
     DossierNaissance,
     Hopital,
     Mairie,
@@ -13,6 +14,7 @@ from app.models import (
     Utilisateur,
 )
 from app.routes.auth import _hash_reset_code
+from app.services.acte_pdf import generer_pdf_acte, resolve_wkhtmltopdf_path
 
 
 class AuthenticationTests(unittest.TestCase):
@@ -76,6 +78,19 @@ class AuthenticationTests(unittest.TestCase):
         response = self.client.get("/admin/admin")
         self.assertEqual(response.status_code, 403)
 
+    def test_admin_dashboard_renders_responsive_sidebar_toggle(self):
+        admin = self.create_user(RoleUtilisateur.ADMIN)
+        with self.client.session_transaction() as client_session:
+            client_session["utilisateur_id"] = admin.id
+
+        response = self.client.get("/admin/admin")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'id="adminSidebar"', response.data)
+        self.assertIn(b'class="mobile-menu-btn"', response.data)
+        self.assertIn(b'aria-controls="adminSidebar"', response.data)
+        self.assertIn(b'class="sidebar-scrim"', response.data)
+
     def test_hospital_and_municipal_routes_enforce_roles(self):
         mairie = Mairie(
             nom="Test Mairie",
@@ -103,6 +118,143 @@ class AuthenticationTests(unittest.TestCase):
             client_session.clear()
             client_session["utilisateur_id"] = municipal_agent.id
         self.assertEqual(self.client.get("/mairie/dashboard").status_code, 200)
+
+    def test_hospital_and_mairie_declarations_keep_correct_origin(self):
+        hospital = Hopital(
+            nom="Declaration Hospital",
+            localisation="Yaounde",
+            region="Centre",
+        )
+        mairie = Mairie(
+            nom="Declaration Mairie",
+            localisation="Yaounde",
+            region="Centre",
+        )
+        db.session.add_all([hospital, mairie])
+        db.session.commit()
+
+        hospital_agent = self.create_user(
+            RoleUtilisateur.AGENT_HOPITAL,
+            username="declaration-hospital-agent",
+            email="declaration-hospital@example.org",
+            hopital_id=hospital.id,
+        )
+        mairie_agent = self.create_user(
+            RoleUtilisateur.AGENT_MAIRIE,
+            username="declaration-mairie-agent",
+            email="declaration-mairie@example.org",
+            mairie_id=mairie.id,
+        )
+        declaration_data = {
+            "nom_enfant": "Test",
+            "prenom_enfant": "Child",
+            "sexe_enfant": "Masculin",
+            "date_naissance": "2025-01-01",
+            "heure_naissance": "12:00",
+            "lieu_naissance": "Yaounde",
+            "nom_mere": "Parent",
+            "prenom_mere": "Test",
+        }
+
+        with self.client.session_transaction() as client_session:
+            client_session["utilisateur_id"] = hospital_agent.id
+        response = self.client.post(
+            "/hopital/ajouter_declaration",
+            data=declaration_data,
+        )
+        self.assertEqual(response.status_code, 302)
+
+        with self.client.session_transaction() as client_session:
+            client_session.clear()
+            client_session["utilisateur_id"] = mairie_agent.id
+        response = self.client.post(
+            "/mairie/ajouter_declaration",
+            data=declaration_data,
+        )
+        self.assertEqual(response.status_code, 302)
+
+        declarations = DossierNaissance.query.order_by(DossierNaissance.id).all()
+        self.assertEqual(len(declarations), 2)
+        self.assertEqual(declarations[0].hopital_id, hospital.id)
+        self.assertEqual(declarations[0].soumis_par_utilisateur_id, hospital_agent.id)
+        self.assertIsNone(declarations[0].mairie_id)
+        self.assertIsNone(declarations[1].hopital_id)
+        self.assertEqual(declarations[1].mairie_id, mairie.id)
+        self.assertEqual(declarations[1].soumis_par_utilisateur_id, mairie_agent.id)
+
+    def test_birth_certificate_template_receives_dossier_and_acte(self):
+        mairie = Mairie(
+            nom="Mairie PDF",
+            localisation="Yaounde",
+            region="Centre",
+        )
+        db.session.add(mairie)
+        db.session.commit()
+        utilisateur = self.create_user(
+            RoleUtilisateur.ADMIN,
+            username="pdf-admin",
+            email="pdf-admin@example.org",
+        )
+        dossier = DossierNaissance(
+            nom_enfant="TEST",
+            prenom_enfant="CHILD",
+            sexe_enfant="Masculin",
+            date_naissance=date(2025, 1, 2),
+            heure_naissance=time(10, 30),
+            lieu_naissance="Yaounde",
+            nom_mere="PARENT",
+            prenom_mere="TEST",
+            mairie_id=mairie.id,
+            hopital_id=None,
+            soumis_par_utilisateur_id=utilisateur.id,
+        )
+        db.session.add(dossier)
+        db.session.flush()
+        acte = ActeNaissance(
+            numero_acte="2025/PDF/1",
+            date_enregistrement=datetime(2025, 1, 3),
+            lieu_enregistrement="Yaounde",
+            nom_complet_enfant="TEST CHILD",
+            sexe_enfant="Masculin",
+            date_naissance_enfant=date(2025, 1, 2),
+            heure_naissance_enfant=time(10, 30),
+            lieu_naissance_enfant="Yaounde",
+            nom_complet_mere="PARENT TEST",
+            dossier_naissance_id=dossier.id,
+            mairie_id=mairie.id,
+            genere_par_utilisateur_id=utilisateur.id,
+        )
+        db.session.add(acte)
+        db.session.commit()
+
+        with (
+            patch("app.services.acte_pdf.pdfkit.from_string") as pdf_renderer,
+            patch("app.services.acte_pdf._pdfkit_config", return_value=None),
+        ):
+            chemin_pdf = generer_pdf_acte(dossier, acte)
+
+        html_genere = pdf_renderer.call_args.args[0]
+        self.assertIn("2025/PDF/1", html_genere)
+        self.assertIn("TEST Child", html_genere)
+        self.assertIn("Mairie PDF", html_genere)
+        self.assertTrue(chemin_pdf.startswith("pdfs/acte_"))
+
+    def test_wkhtmltopdf_path_uses_configured_executable(self):
+        configured_path = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+        with (
+            patch.dict(self.app.config, {"WKHTMLTOPDF_PATH": configured_path}),
+            patch("app.services.acte_pdf.os.path.isfile", return_value=True),
+        ):
+            self.assertEqual(resolve_wkhtmltopdf_path(), configured_path)
+
+    def test_missing_wkhtmltopdf_has_actionable_error(self):
+        with (
+            patch.dict(self.app.config, {"WKHTMLTOPDF_PATH": None}),
+            patch("app.services.acte_pdf.shutil.which", return_value=None),
+            patch("app.services.acte_pdf.os.path.isfile", return_value=False),
+        ):
+            with self.assertRaisesRegex(FileNotFoundError, "WKHTMLTOPDF_PATH"):
+                resolve_wkhtmltopdf_path()
 
     def test_agency_agents_cannot_modify_other_agency_records(self):
         hospital_a = Hopital(

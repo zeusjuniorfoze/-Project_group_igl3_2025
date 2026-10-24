@@ -6,6 +6,7 @@ Dépendances : pip install pdfkit num2words qrcode[pil]
 import base64
 import io
 import os
+import shutil
 from datetime import datetime
 
 import pdfkit
@@ -142,15 +143,47 @@ def construire_contexte(dossier, acte, mentions=None):
 
 
 # ---------- Génération ----------
+def resolve_wkhtmltopdf_path():
+    chemin = current_app.config.get("WKHTMLTOPDF_PATH")
+    if chemin:
+        chemin = os.path.expandvars(os.path.expanduser(os.fspath(chemin)))
+        if os.path.isdir(chemin):
+            executable = "wkhtmltopdf.exe" if os.name == "nt" else "wkhtmltopdf"
+            chemin = os.path.join(chemin, executable)
+        if not os.path.isfile(chemin):
+            raise FileNotFoundError(
+                f"WKHTMLTOPDF_PATH ne pointe pas vers un exécutable existant : {chemin}"
+            )
+        return chemin
+
+    chemin = shutil.which("wkhtmltopdf")
+    if chemin:
+        return chemin
+
+    if os.name == "nt":
+        chemin = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+        if os.path.isfile(chemin):
+            return chemin
+
+    raise FileNotFoundError(
+        "wkhtmltopdf est introuvable. Installez wkhtmltopdf, puis ajoutez son "
+        "dossier bin au PATH ou définissez WKHTMLTOPDF_PATH dans le fichier .env."
+    )
+
+
 def _pdfkit_config():
-    chemin = current_app.config.get("WKHTMLTOPDF_PATH")  # ex: /usr/bin/wkhtmltopdf
-    return pdfkit.configuration(wkhtmltopdf=chemin) if chemin else None
+    return pdfkit.configuration(wkhtmltopdf=resolve_wkhtmltopdf_path())
 
 
 def generer_pdf_acte(dossier, acte):
     """Génère le PDF et renvoie le chemin RELATIF à static/ (ex: 'pdfs/acte_12_xxx.pdf')."""
     contexte = construire_contexte(dossier, acte, getattr(acte, "mentions_marginales", []))
-    html = render_template("mairie/documents/acte_naissance.html", c=contexte)
+    html = render_template(
+        "mairie/documents/acte_naissance.html",
+        c=contexte,
+        dossier=dossier,
+        acte=acte,
+    )
 
     dossier_pdf = os.path.join(current_app.root_path, "static", "pdfs")
     os.makedirs(dossier_pdf, exist_ok=True)

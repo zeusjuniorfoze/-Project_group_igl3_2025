@@ -8,7 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeSidebar = () => {
         sidebar?.classList.remove("show");
         scrim?.classList.remove("show");
+        document.body.classList.remove("sidebar-open");
         menuButton?.setAttribute("aria-expanded", "false");
+        menuButton?.setAttribute("aria-label", "Ouvrir le menu de navigation");
     };
 
     const showPage = (hash) => {
@@ -45,11 +47,20 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("hashchange", () => showPage(window.location.hash));
 
     menuButton?.addEventListener("click", () => {
+        if (!sidebar) return;
         const isOpen = sidebar.classList.toggle("show");
         scrim?.classList.toggle("show", isOpen);
+        document.body.classList.toggle("sidebar-open", isOpen);
         menuButton.setAttribute("aria-expanded", String(isOpen));
+        menuButton.setAttribute(
+            "aria-label",
+            isOpen ? "Fermer le menu de navigation" : "Ouvrir le menu de navigation"
+        );
     });
     scrim?.addEventListener("click", closeSidebar);
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeSidebar();
+    });
 
     document.querySelectorAll("[data-table-search]").forEach((input) => {
         const table = document.getElementById(input.dataset.tableSearch);

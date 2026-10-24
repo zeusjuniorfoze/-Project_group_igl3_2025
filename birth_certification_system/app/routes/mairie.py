@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 
 from flask import (render_template, session, redirect, url_for, flash, Blueprint,
-                   request, abort, current_app, send_from_directory)
+                request, abort, current_app, send_from_directory)
 from flask_mail import Message
 from markupsafe import escape
 
@@ -147,15 +147,9 @@ def ajouter_declaration():
         flash("Veuillez remplir tous les champs obligatoires.", "danger")
         return redirect(url_for('mairie.dashboard'))
 
-    # NB : la colonne hopital_id est NOT NULL. Un agent de mairie n'a normalement pas
-    # d'hôpital : il faut soit le rendre nullable, soit un hôpital par défaut.
-    if session.get('hopital_id') is None:
-        flash("Aucun hôpital n'est associé à votre compte : impossible d'ajouter une déclaration.", "danger")
-        return redirect(url_for('mairie.dashboard'))
-
     try:
         dossier = DossierNaissance(
-            hopital_id=session['hopital_id'],
+            hopital_id=None,
             mairie_id=session['mairie_id'],
             soumis_par_utilisateur_id=session['utilisateur_id'],
         )

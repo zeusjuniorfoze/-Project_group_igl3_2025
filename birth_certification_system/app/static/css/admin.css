@@ -615,6 +615,7 @@
    .flash-container:empty { display: none; }
    .flash-container .alert { margin-bottom: .6rem; border: 1px solid var(--admin-line); border-left: 4px solid var(--admin-green); border-radius: 12px; box-shadow: 0 12px 28px rgba(25,48,75,.14); }
    .sidebar-scrim { display: none; }
+   .admin-mobile-bar { display: none; }
 
    @media (max-width: 1199.98px) {
        .card-stats .card-body { padding: 1rem; }
@@ -627,6 +628,11 @@
        .sidebar.show { transform: translateX(0); }
        .sidebar-scrim.show { display: block; position: fixed; z-index: 1100; inset: 0; background: rgba(12, 28, 44, .45); backdrop-filter: blur(2px); }
        .content { margin-left: 0; width: 100%; }
+       .admin-mobile-bar { position: sticky; top: 0; z-index: 500; display: flex; align-items: center; gap: .85rem; min-height: 64px; padding: .7rem 1rem; background: rgba(255,255,255,.92); border-bottom: 1px solid rgba(220, 228, 237, .82); box-shadow: 0 6px 24px rgba(29, 50, 77, .035); backdrop-filter: blur(14px); }
+       .admin-mobile-bar > strong { color: var(--admin-ink); font-size: .95rem; }
+       .admin-mobile-bar .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; width: auto; min-width: 40px; padding: 0 .65rem; color: #52657a; font-size: .82rem; font-weight: 650; }
+       .admin-mobile-bar .mobile-menu-btn i { font-size: 1.3rem; }
+       body.sidebar-open { overflow: hidden; }
        .content-header { min-height: 72px; gap: .55rem; padding: .75rem 1rem; }
        .mobile-menu-btn { display: grid; place-items: center; width: 40px; height: 40px; margin: 0; border-radius: 12px; background: #f0f4f7; }
        .content-header h1 { font-size: 1.05rem; }

@@ -26,6 +26,17 @@ python -m flask --app run.py db current
 python -m flask --app run.py db check
 ```
 
+## Génération des actes PDF
+
+La génération des actes requiert également l'exécutable `wkhtmltopdf` (le paquet
+Python `pdfkit` ne l'inclut pas). Sous Windows, installez wkhtmltopdf, puis
+ajoutez son dossier `bin` au `PATH`. Si le binaire n'est pas dans le `PATH`,
+définissez `WKHTMLTOPDF_PATH` dans `.env`, par exemple :
+
+```dotenv
+WKHTMLTOPDF_PATH=C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe
+```
+
 ## Créer le compte administrateur initial
 
 Depuis `birth_certification_system`, lancez :

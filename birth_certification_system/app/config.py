@@ -70,6 +70,4 @@ class Config:
     if not MAIL_USERNAME or not MAIL_PASSWORD:
         print("Attention : Les variables MAIL_USERNAME et MAIL_PASSWORD ne sont pas definies.")
 
-    PDFKIT_CONFIG = {
-        'wkhtmltopdf': r'C:\Program Files\wkhtmltopdf\bin'  # Chemin selon votre OS
-    }
+    WKHTMLTOPDF_PATH = os.getenv('WKHTMLTOPDF_PATH') or None

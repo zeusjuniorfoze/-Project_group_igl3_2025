@@ -16,7 +16,6 @@ import csv
 import io
 import os
 import platform
-import shutil
 from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlparse
@@ -29,6 +28,7 @@ from sqlalchemy import func
 from app.models import (ActeNaissance, DossierNaissance, Hopital, JournalAudit,
                         Mairie, RoleUtilisateur, StatutDossier, Utilisateur, db)
 from app.services.audit import journaliser
+from app.services.acte_pdf import resolve_wkhtmltopdf_path
 from .admin import admin_bp
 
 MOIS_COURTS = ["janv.", "févr.", "mars", "avr.", "mai", "juin",
@@ -83,8 +83,11 @@ def _derniers_mois(n=12):
 
 
 def _etat_systeme():
-    chemin_wk = current_app.config.get('WKHTMLTOPDF_PATH') or shutil.which('wkhtmltopdf')
-    wk_ok = bool(chemin_wk and os.path.exists(chemin_wk))
+    try:
+        chemin_wk = resolve_wkhtmltopdf_path()
+    except FileNotFoundError:
+        chemin_wk = current_app.config.get('WKHTMLTOPDF_PATH') or 'introuvable'
+    wk_ok = os.path.isfile(chemin_wk)
 
     dossier_img = os.path.join(current_app.root_path, 'static', 'img')
     images = {nom: os.path.exists(os.path.join(dossier_img, nom))

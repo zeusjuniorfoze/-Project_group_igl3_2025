@@ -27,14 +27,14 @@
     <div class="admin-container">
 
         <!-- ===================== BARRE LATÉRALE ===================== -->
-        <div class="sidebar">
+        <div class="sidebar" id="adminSidebar">
             <div class="logo text-center py-3">
                 <img src="{{ url_for('static', filename='images/télécharger.jpg') }}" alt="Logo" class="img-fluid"
                     style="max-height: 60px;">
                 <h5 class="text-white mt-2">État Civil</h5>
             </div>
 
-            <ul class="menu">
+            <ul class="menu" aria-label="Navigation administrateur">
                 <li class="active"><a href="#home"><i class="bx bx-home-alt"></i> <span>Accueil</span></a></li>
                 <li><a href="#page2"><i class="bx bx-user-circle"></i> <span>Utilisateurs</span></a></li>
                 <li><a href="#page1"><i class="bx bx-plus-medical"></i> <span>Hôpitaux</span></a></li>
@@ -57,6 +57,18 @@
 
         <!-- ===================== CONTENU ===================== -->
         <div class="content">
+            <div class="admin-mobile-bar">
+                <button
+                    type="button"
+                    class="mobile-menu-btn"
+                    aria-label="Ouvrir le menu de navigation"
+                    aria-controls="adminSidebar"
+                    aria-expanded="false">
+                    <i class="bx bx-menu" aria-hidden="true"></i>
+                    <span>Menu</span>
+                </button>
+                <strong>Administration</strong>
+            </div>
 
             <!-- ============ ACCUEIL ============ -->
             <section id="home" class="page active">
@@ -667,6 +679,7 @@
             </section>
         </div>
     </div>
+    <div class="sidebar-scrim" aria-hidden="true"></div>
 
     <!-- Données des graphiques et notifications : balises JSON, aucun code Jinja dans le JavaScript -->
     {% set graph_data = {
