@@ -14,7 +14,6 @@ import qrcode
 from flask import current_app, render_template, url_for
 from num2words import num2words
 
-
 MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
         "août", "septembre", "octobre", "novembre", "décembre"]
 
@@ -68,7 +67,7 @@ def img_b64(nom_fichier):
 
 
 def qr_b64(contenu):
-    img = qrcode.make(contenu, box_size=6, border=1)
+    img = qrcode.make(contenu, box_size=10, border=1)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()

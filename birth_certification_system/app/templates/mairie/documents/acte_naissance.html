@@ -1,241 +1,200 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Acte de Naissance - Birth Certificate</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 0.8cm;
-        }
+<meta charset="UTF-8">
+<title>Acte de naissance {{ c.numero_acte }}</title>
+<style>
+  /* CSS volontairement simple : wkhtmltopdf ne gère pas flexbox/grid */
+  body { font-family: Arial, 'DejaVu Sans', sans-serif; font-size: 11pt; color: #111; margin: 0; padding: 0; }
+  table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+  td { vertical-align: bottom; padding: 0; }
+  .page { position: relative; width: 190mm; margin: 0 auto; }
 
-        body {
-            font-family: 'Arial', sans-serif;
-            font-size: 9pt;
-            line-height: 1.3;
-            color: #222;
-            margin: 0;
-            padding: 0;
-        }
+  .filigrane { position: absolute; top: 85mm; left: 30mm; width: 130mm; opacity: 0.12; z-index: 0; }
 
-        .certificate-container {
-            width: 100%;
-            height: 100%;
-            border: 4px solid #1a3e72;
-            padding: 15px;
-            box-sizing: border-box;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+  /* En-tête */
+  .entete td { vertical-align: top; font-size: 9pt; line-height: 1.4; }
+  .entete .gauche { text-align: center; width: 36%; }
+  .entete .centre { text-align: center; width: 28%; }
+  .entete .droite { text-align: center; width: 36%; }
+  .entete b { font-size: 9.5pt; }
+  .armoiries { width: 27mm; height: auto; }
 
-        .watermark {
-            position: absolute;
-            content: "OFFICIEL";
-            opacity: 0.6;
-            font-size: 90pt;
-            color: #1a3e72;
-            transform: rotate(-45deg);
-            left: 5%;
-            top: 40%;
-            width: 100%;
-            text-align: center;
-            z-index: 0;
-            pointer-events: none;
-        }
+  .centre-civil { text-align: center; font-weight: bold; font-size: 12.5pt; margin: 8mm 0 3mm 0; }
+  .mairie-ligne { text-align: center; font-weight: bold; font-size: 10.5pt; border-bottom: 1px solid #555; padding-bottom: 1mm; }
+  .de-of { font-size: 9.5pt; }
 
-        .certificate-number {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 9pt;
-            color: #666;
-            z-index: 1; /* ✅ Devant le filigrane */
-        }
+  .titre { text-align: center; font-weight: bold; font-size: 16pt; text-decoration: underline; margin-top: 6mm; }
+  .numero { text-align: center; font-weight: bold; font-size: 12.5pt; text-decoration: underline; margin-bottom: 5mm; }
 
-        .header {
-            text-align: center;
-            border-bottom: 1px solid #1a3e72;
-            padding-bottom: 5px;
-        }
+  /* Lignes de champs */
+  .ligne { margin-top: 3.3mm; }
+  .l { font-size: 9.5pt; white-space: nowrap; padding-right: 3mm; }
+  .v { border-bottom: 1px solid #777; font-size: 11pt; font-weight: bold; padding: 0 2mm; height: 6.5mm; overflow: hidden; }
+  .petit { font-size: 8.5pt; white-space: normal; line-height: 1.25; padding-left: 3mm; vertical-align: bottom; }
+  .v.normal { font-weight: normal; }
+  .bloc-texte { border-bottom: 1px solid #777; font-size: 10pt; font-weight: bold; text-transform: uppercase; padding: 1mm 2mm; line-height: 1.3; }
 
-        .header h1 {
-            font-size: 14pt;
-            margin: 0;
-            text-transform: uppercase;
-            color: #1a3e72;
-        }
+  /* Pied : signatures */
+  .signatures td { vertical-align: top; text-align: center; font-size: 10pt; }
+  .qr { width: 34mm; height: 34mm; }
+  .cachet { width: 42mm; height: auto; }
+  .signature-img { height: 20mm; width: auto; }
+  .nom-signataire { font-weight: bold; font-size: 10pt; }
+  .nipu { text-align: center; font-size: 10.5pt; font-weight: bold; margin-top: 3mm; }
 
-        .header h2 {
-            font-size: 10pt;
-            margin: 2px 0;
-            color: #1a3e72;
-        }
-
-        .subtitle {
-            font-size: 8pt;
-            color: #666;
-        }
-
-        .document-title {
-            text-align: center;
-            font-size: 12pt;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #1a3e72;
-            text-transform: uppercase;
-        }
-
-        .document-subtitle {
-            text-align: center;
-            font-size: 10pt;
-            margin-bottom: 15px;
-            color: #1a3e72;
-        }
-
-        .section {
-            margin-bottom: 8px;
-            page-break-inside: avoid;
-        }
-
-        .section-title {
-            font-size: 9pt;
-            color: #1a3e72;
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 1px solid #ccc;
-            margin-bottom: 5px;
-        }
-
-        .field {
-            display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 5px;
-            margin-bottom: 3px;
-        }
-
-        .field-label {
-            font-weight: bold;
-        }
-
-        .field-value {
-            border-bottom: 1px dotted #999;
-            padding-bottom: 1px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .signature-area {
-            text-align: right;
-            font-size: 9pt;
-            margin-top: 20px;
-        }
-
-        .signature-line {
-            width: 200px;
-            border-top: 1px solid #000;
-            margin-top: 30px;
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 7pt;
-            color: #777;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
-        }
-    </style>
+  /* Page 2 : mentions marginales */
+  .saut { page-break-before: always; }
+  .mentions-titre { text-align: center; font-weight: bold; font-size: 11pt; text-decoration: underline; color: #7a1f1f; margin-bottom: 4mm; }
+  .mention { border: 1px solid #333; margin-bottom: 4mm; font-size: 9.5pt; }
+  .mention td { border: 1px solid #333; padding: 1.5mm 2mm; vertical-align: middle; }
+  .mention .c { text-align: center; }
+</style>
 </head>
 <body>
-    <div class="certificate-container">
-        <div class="watermark">OFFICIEL</div>
-        <div class="certificate-number"><strong>N°: {{ acte.numero_acte }}</strong></div>
 
-        <!-- EN-TÊTE -->
-        <div class="header">
-            <h1>RÉPUBLIQUE DU CAMEROUN</h1>
-            <h2>REPUBLIC OF CAMEROON</h2>
-            <h1>MAIRIE DE {{ dossier.mairie.nom|upper }}</h1>
-            <h2>{{ dossier.mairie.nom|upper }} CITY COUNCIL</h2>
-            <div class="subtitle">Service de l'État Civil / Civil Status Registration Office</div>
-        </div>
+{# ---------- Macros ---------- #}
+{% macro ligne(label, valeur, lw=27) %}
+<table class="ligne">
+  <tr>
+    <td class="l" width="{{ lw }}%">{{ label }}</td>
+    <td class="v">{{ valeur or '' }}</td>
+  </tr>
+</table>
+{% endmacro %}
 
-        <!-- TITRE -->
-        <div class="document-title">ACTE DE NAISSANCE</div>
-        <div class="document-subtitle">BIRTH CERTIFICATE</div>
+{% macro ligne2(l1, v1, l2, v2, w1=27, w2=33, w3=17) %}
+<table class="ligne">
+  <tr>
+    <td class="l" width="{{ w1 }}%">{{ l1 }}</td>
+    <td class="v" width="{{ w2 }}%">{{ v1 or '' }}</td>
+    <td class="l" width="{{ w3 }}%" style="text-align: right;">{{ l2 }}</td>
+    <td class="v">{{ v2 or '' }}</td>
+  </tr>
+</table>
+{% endmacro %}
 
-        <!-- ENFANT / CHILD -->
-        <div class="section">
-            <div class="section-title">ENFANT / CHILD</div>
-            <div class="field"><div class="field-label">Nom et prénoms / Name:</div><div class="field-value">{{ dossier.nom_enfant|upper }} {{ dossier.prenom_enfant|title }}</div></div>
-            <div class="field"><div class="field-label">Sexe / Gender:</div><div class="field-value">{{ 'Masculin / Male' if dossier.sexe_enfant == 'Masculin' else 'Féminin / Female' }}</div></div>
-            <div class="field"><div class="field-label">Date de naissance / Date of birth:</div><div class="field-value">{{ dossier.date_naissance.strftime('%d/%m/%Y') }}</div></div>
-            <div class="field"><div class="field-label">Heure de naissance / Time of birth:</div><div class="field-value">{{ dossier.heure_naissance.strftime('%H:%M') }}</div></div>
-            <div class="field"><div class="field-label">Lieu de naissance / Place of birth:</div><div class="field-value">{{ dossier.lieu_naissance }}</div></div>
-        </div>
+<div class="page">
 
-        <!-- PÈRE / FATHER -->
-        <div class="section">
-            <div class="section-title">PÈRE / FATHER</div>
-            <div class="field"><div class="field-label">Nom et prénoms / Name:</div>
-                <div class="field-value">
-                    {% if dossier.nom_pere %}
-                    {{ dossier.nom_pere|upper }} {{ dossier.prenom_pere|title }}
-                    {% else %}
-                    Non déclaré / Not declared
-                    {% endif %}
-                </div>
-            </div>
-            {% if dossier.nom_pere %}
-            <div class="field"><div class="field-label">Date de naissance / Date of birth:</div><div class="field-value">{{ dossier.date_naissance_pere.strftime('%d/%m/%Y') if dossier.date_naissance_pere else 'Non renseignée / Not provided' }}</div></div>
-            <div class="field"><div class="field-label">Lieu de naissance / Place of birth:</div><div class="field-value">{{ dossier.lieu_naissance_pere or 'Non renseigné / Not provided' }}</div></div>
-            <div class="field"><div class="field-label">Profession / Occupation:</div><div class="field-value">{{ dossier.profession_pere or 'Non renseignée / Not provided' }}</div></div>
-            <div class="field"><div class="field-label">Nationalité / Nationality:</div><div class="field-value">{{ dossier.nationalite_pere or 'Non renseignée / Not provided' }}</div></div>
-            {% endif %}
-        </div>
+  {% if c.img.filigrane %}<img class="filigrane" src="{{ c.img.filigrane }}">{% endif %}
 
-        <!-- MÈRE / MOTHER -->
-        <div class="section">
-            <div class="section-title">MÈRE / MOTHER</div>
-            <div class="field"><div class="field-label">Nom et prénoms / Name:</div><div class="field-value">{{ dossier.nom_mere|upper }} {{ dossier.prenom_mere|title }}</div></div>
-            <div class="field"><div class="field-label">Date de naissance / Date of birth:</div><div class="field-value">{{ dossier.date_naissance_mere.strftime('%d/%m/%Y') if dossier.date_naissance_mere else 'Non renseignée / Not provided' }}</div></div>
-            <div class="field"><div class="field-label">Lieu de naissance / Place of birth:</div><div class="field-value">{{ dossier.lieu_naissance_mere or 'Non renseigné / Not provided' }}</div></div>
-            <div class="field"><div class="field-label">Profession / Occupation:</div><div class="field-value">{{ dossier.profession_mere or 'Non renseignée / Not provided' }}</div></div>
-            <div class="field"><div class="field-label">Nationalité / Nationality:</div><div class="field-value">{{ dossier.nationalite_mere or 'Non renseignée / Not provided' }}</div></div>
-        </div>
+  {# ---------- En-tête bilingue ---------- #}
+  <table class="entete">
+    <tr>
+      <td class="gauche">
+        <b>REPUBLIQUE DU CAMEROUN</b><br>
+        Paix – Travail – Patrie<br>
+        ----------<br>
+        Région : {{ c.region|upper }}<br>
+        Département : {{ c.departement|upper }}<br>
+        Arrondissement : {{ c.arrondissement|upper }}
+      </td>
+      <td class="centre">
+        {% if c.img.armoiries %}<img class="armoiries" src="{{ c.img.armoiries }}">{% endif %}
+      </td>
+      <td class="droite">
+        <b>REPUBLIC OF CAMEROON</b><br>
+        Peace – Work – Fatherland<br>
+        ----------<br>
+        Region : {{ c.region_en|upper }}<br>
+        Division : {{ c.departement|upper }}<br>
+        Subdivision : {{ c.arrondissement|upper }}
+      </td>
+    </tr>
+  </table>
 
-        <!-- DÉCLARANT / DECLARANT -->
-        {% if dossier.nom_declarant %}
-        <div class="section">
-            <div class="section-title">DÉCLARANT / DECLARANT</div>
-            <div class="field"><div class="field-label">Nom et prénoms / Name:</div><div class="field-value">{{ dossier.nom_declarant|upper }} {{ dossier.prenom_declarant|title }}</div></div>
-            <div class="field"><div class="field-label">Lien de parenté / Relationship:</div><div class="field-value">{{ dossier.lien_parente_declarant }}</div></div>
-        </div>
-        {% endif %}
+  <div class="centre-civil">CENTRE D'ETAT CIVIL / CIVIL STATUS REGISTRATION CENTRE</div>
+  <table>
+    <tr>
+      <td class="de-of" style="width: 12%;">De / of :</td>
+      <td class="mairie-ligne">MAIRIE DE {{ c.mairie_nom|upper }}</td>
+    </tr>
+  </table>
 
-        <!-- INFORMATIONS ADMINISTRATIVES -->
-        <div class="section">
-            <div class="section-title">INFORMATIONS ADMINISTRATIVES / ADMINISTRATIVE INFORMATION</div>
-            <div class="field"><div class="field-label">Numéro d'acte / Certificate number:</div><div class="field-value">{{ acte.numero_acte }}</div></div>
-            <div class="field"><div class="field-label">Date d'enregistrement / Registration date:</div><div class="field-value">{{ acte.date_enregistrement.strftime('%d/%m/%Y') }}</div></div>
-            <div class="field"><div class="field-label">Lieu d'enregistrement / Registration place:</div><div class="field-value">{{ acte.lieu_enregistrement }}</div></div>
-        </div>
+  <div class="titre">ACTE DE NAISSANCE / BIRTH CERTIFICATE</div>
+  <div class="numero">N° : {{ c.numero_acte }}</div>
 
-        <!-- SIGNATURE -->
-        <div class="signature-area">
-            <div>Fait à {{ dossier.mairie.nom }}, le {{ acte.date_enregistrement.strftime('%d/%m/%Y') }}</div>
-            <div>Done at {{ dossier.mairie.nom }}, on {{ acte.date_enregistrement.strftime('%d/%m/%Y') }}</div>
-            <div class="signature-line"></div>
-            <div>Le Maire / The Mayor</div>
-        </div>
+  {# ---------- Enfant ---------- #}
+  {{ ligne("Nom de l'enfant / Surname of the Child :", c.nom_enfant, 41) }}
+  {{ ligne("Prénoms de l'enfant / Given name of the Child :", c.prenoms_enfant, 48) }}
+  {{ ligne("Né(e) le / Born on the :", c.date_naissance_lettres, 22) }}
+  {{ ligne2("A / At :", c.lieu_naissance, "Sexe / Sex :", c.sexe, 10, 45, 15) }}
 
-        <!-- PIED DE PAGE -->
-        <div class="footer">
-            Document officiel - Ne pas jeter / Official document - Do not discard<br>
-            Numéro d'enregistrement : {{ acte.numero_acte }} / Registration number: {{ acte.numero_acte }}
-        </div>
-    </div>
+  {# ---------- Père ---------- #}
+  {{ ligne("De / Of :", c.pere.nom, 10) }}
+  {{ ligne2("Né à / Born at :", c.pere.lieu_naissance, "le / the :", c.pere.date_naissance, 18, 40, 12) }}
+  {{ ligne2("Domicilié à / Resident At :", c.pere.domicile, "Nationalité / Nationality :", c.pere.nationalite, 29, 20, 27) }}
+  {{ ligne("Profession / Occupation :", c.pere.profession, 28) }}
+  {{ ligne("Document de référence / Reference Document :", c.pere.document, 49) }}
+
+  {# ---------- Mère ---------- #}
+  {{ ligne("Et de / And Of :", c.mere.nom, 14) }}
+  {{ ligne2("Née à / Born at :", c.mere.lieu_naissance, "le / the :", c.mere.date_naissance, 18, 40, 12) }}
+  {{ ligne2("Domiciliée à / Resident At :", c.mere.domicile, "Nationalité / Nationality :", c.mere.nationalite, 29, 20, 27) }}
+  {{ ligne("Profession / Occupation :", c.mere.profession, 28) }}
+  {{ ligne("Document de référence / Reference Document :", c.mere.document, 49) }}
+
+  {# ---------- Déclaration ---------- #}
+  {{ ligne2("Déclaré le / Declared on :", c.date_declaration, "Par / By :", c.declarant_nom, 24, 26, 10) }}
+  <table class="ligne">
+    <tr>
+      <td class="l" style="width: 12%;">Qualité :</td>
+      <td class="bloc-texte">{{ c.declarant_qualite }}</td>
+    </tr>
+  </table>
+  <table class="ligne">
+    <tr>
+      <td class="l" style="width: 14%;">Le / On the :</td>
+      <td class="v" style="width: 22%;">{{ c.date_attestation or '' }}</td>
+      <td class="petit">lesquels ont certifié la sincérité de la présente déclaration - Who attested to the truth of this declaration</td>
+    </tr>
+  </table>
+  {{ ligne2("Par nous / By Us :", c.officier_nom, "Officier d'état Civil - Civil Status Registrar", "", 18, 30, 52) }}
+  {{ ligne("Assisté de - In the presence of :", c.secretaire_nom, 30) }}
+
+  {# ---------- Signatures ---------- #}
+  <table class="signatures" style="margin-top: 8mm;">
+    <tr>
+      <td style="width: 34%;">
+        Le Secrétaire / Secretary<br>
+        {% if c.img.signature_secretaire %}<img class="signature-img" src="{{ c.img.signature_secretaire }}"><br>{% endif %}
+        <span class="nom-signataire">{{ c.secretaire_nom }}</span>
+      </td>
+      <td style="width: 32%;">
+        {% if c.qr %}<img class="qr" src="{{ c.qr }}">{% endif %}
+      </td>
+      <td style="width: 34%;">
+        L'Officier / Registrar<br>
+        {% if c.img.cachet %}<img class="cachet" src="{{ c.img.cachet }}"><br>{% endif %}
+        <span class="nom-signataire">{{ c.officier_nom }}</span>
+      </td>
+    </tr>
+  </table>
+  <div class="nipu">NIPU : {{ c.nipu }}</div>
+
+</div>
+
+{# ---------- Page 2 : mentions marginales (seulement s'il y en a) ---------- #}
+{% if c.mentions %}
+<div class="page saut">
+  <div class="mentions-titre">MENTIONS MARGINALES / MARGINAL MENTIONS</div>
+  {% for m in c.mentions %}
+  <div style="position: relative;">
+  {% if c.img.cachet %}<img src="{{ c.img.cachet }}" style="position: absolute; right: 22mm; top: -4mm; width: 30mm; height: auto; z-index: 5;">{% endif %}
+  <table class="mention">
+    <tr>
+      <td style="width: 32%;" class="c"><b>MAIRIE DE {{ c.mairie_nom|upper }}</b></td>
+      <td style="width: 40%;" class="c"><b>{{ m.type|upper }} N°</b><br>{{ m.numero }}</td>
+      <td class="c">Officier d'état civil<br><b>{{ m.officier_nom }}</b></td>
+    </tr>
+    <tr><td colspan="3" class="c">Date : {{ m.date }}</td></tr>
+    <tr><td colspan="3" class="c">{{ m.texte }}</td></tr>
+    <tr><td colspan="3" class="c">{{ m.base_legale }}</td></tr>
+  </table>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 </body>
 </html>

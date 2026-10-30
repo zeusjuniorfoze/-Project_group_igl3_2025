@@ -235,8 +235,9 @@ class AuthenticationTests(unittest.TestCase):
 
         html_genere = pdf_renderer.call_args.args[0]
         self.assertIn("2025/PDF/1", html_genere)
-        self.assertIn("TEST Child", html_genere)
-        self.assertIn("Mairie PDF", html_genere)
+        self.assertIn("TEST", html_genere)
+        self.assertIn("CHILD", html_genere)
+        self.assertIn("MAIRIE PDF", html_genere)
         self.assertTrue(chemin_pdf.startswith("pdfs/acte_"))
 
     def test_wkhtmltopdf_path_uses_configured_executable(self):
